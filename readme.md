@@ -8,14 +8,15 @@
 
 ## Introduction
 
-The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management.
+The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/.
 
-This method only focusings on mirroring and downloading WordPress Plugin zip files itself instead of mirroring the entire WordPress plugin SVN repository. The reason is SVN repositories contain the history of all commits and versions for a WordPress plugin so involve alot more files and data size/transfer is larger. 
+This method only focuses on mirroring and downloading WordPress Plugin zip files itself instead of mirroring the entire WordPress plugin SVN repository. The reason is SVN repositories contain the history of all commits and versions for a WordPress plugin so involve alot more files and data size/transfer is larger. 
 
+Disclaimer, I am a Cloudflare customer since 2011 and official Cloudflare community MVP since 2018 (non-paid similar to how Microsoft MVP program operates) using Cloudflare Free, Pro, Business and Enterprise plans.
 
 ### SVN Mirroring?
 
-Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository.
+Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which is well within Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage.
 
 Recently I been working on custom RPM package builds for newer featured forked csync2 2.1.1 for AlmaLinux/Rocky Linux which have atomic file updates, nanoseconds support and parallel node updates via inotifywait triggers as csync2 2.0 is too old. I could setup multiple csync2 2.1.1 server nodes each setup with with HTTP forward proxies + proxychains proxy rotation and have servers configured to clone the WordPress SVN repos from any of the csync2 node servers and have updates automatically sync to all csync2 nodes. It would scale easily as you add new csync2 node servers to cluster, your HTTP forward proxies pool for proxychains would scale up too.
 
