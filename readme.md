@@ -397,12 +397,12 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.js
 
 Using Github Workflow to automate the script.
 
-![Github Workflow](/get_plugins_r2_workflow-01.png)
+![Github Workflow](/screenshots/get_plugins_r2_workflow-01.png)
 
-![Github Workflow](/get_plugins_r2_workflow-02.png)
+![Github Workflow](/screenshots/get_plugins_r2_workflow-02.png)
 
 Example of Cloudflare R2 S3 buckets populated with WordPress plugin zip files and JSON metadata files using S3Browser to view the listings. The example is only using a selection of WordPress plugins I want to mirror for this POC. Script supports full mirror and cache of all >100K plugins.
 
-![Cloudflare R2 S3 Bucket](/get_plugins_r2_s3browser-listing-plugins-01.png)
+![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-01.png)
 
-![Cloudflare R2 S3 Bucket](/get_plugins_r2_s3browser-listing-plugins-json-metadata-01.png)
+![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-json-metadata-01.png)
