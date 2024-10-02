@@ -195,6 +195,8 @@ drwxr-sr-x 4 root nginx   39 Sep 30 12:56 ..
 
 Script also saves each WordPress plugin's HTTP response headers for troubleshooting
 
+Example where source of WordPress plugin is from WordPress download on `https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip` via `x-source: WordPress`.
+
 ```bash
 cat /home/nginx/domains/plugins.domain.com/plugin-logs/autoptimize.3.1.12.headers
 
@@ -213,9 +215,79 @@ x-latest-version: 3.1.12
 x-nc: EXPIRED ord 8
 x-source: WordPress
 x-suggested-filename: autoptimize.3.1.12.zip
-report-to: {"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v4?s=G%2Btu0W510jXEvTaN1b1qYu04ai4a%2FQrslhaBYg8juzey%2FkxySD7Lt2bWr3uW2LdiQ0kjHnNd4SxlRvIGlFd9%2BzQisJjpGbga8tglJ%2BnvOr4Eq9pxUvALch7sFULf5XCN2MMIaBWzetSOjxd%2BCkN1d8maEkTg9eXtn%2FM%3D"}],"group":"cf-nel","max_age":604800}
-nel: {"success_fraction":0,"report_to":"cf-nel","max_age":604800}
 server: cloudflare
+```
+
+Example where source is from Cloudflare R2 S3 bucket cached version `x-source: R2`. 
+
+Though `content-type` is JSON as the script detects that it already has the latest version of a plugin in the local mirror directory, it doesn't need to download the ZIP file again. Instead, it just updating or verifying the metadata for that plugin. The Worker is designed to handle both ZIP files and JSON metadata. When it's not necessary to download the full ZIP (because it already exists locally), the Worker returns JSON metadata about the plugin instead.
+
+```bash
+cat /home/nginx/domains/plugins.domain.com/plugin-logs/autoptimize.3.1.12.headers
+
+HTTP/2 200 
+date: Wed, 02 Oct 2024 19:42:28 GMT
+content-type: application/json
+content-length: 33
+cf-ray: 8cc72d037ea27bcd-LAX
+cf-cache-status: HIT
+accept-ranges: bytes
+age: 1911
+last-modified: Wed, 02 Oct 2024 19:10:37 GMT
+vary: Accept-Encoding
+x-source: R2
+server: cloudflare
+```
+
+Re-test with manual removal of the plugin
+
+```
+rm -f /home/nginx/domains/plugins.domain.com/public/autoptimize.3.1.12.zip
+```
+
+Excerpt from just `autoptimize` plugin re-download locally.
+
+```
+./get_plugins_r2.sh -p 1 -d
+
+Processing plugin: autoptimize
+[DEBUG] Checking latest version and download link for autoptimize
+[DEBUG] Latest version for autoptimize: 3.1.12
+[DEBUG] API download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Stored version for autoptimize: 3.1.12
+[DEBUG] API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Constructed download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Using API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Downloading autoptimize version 3.1.12 through Cloudflare Worker
+[DEBUG] Successfully downloaded autoptimize version 3.1.12 from R2 storage
+Successfully processed autoptimize.
+Time taken for autoptimize: 0.2593 seconds
+[DEBUG] Saving plugin json metadata for autoptimize version 3.1.12
+[DEBUG] json metadata for autoptimize version 3.1.12 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for autoptimize.
+
+Plugin download process completed.
+```
+
+Re-inspect the saved HTTP response header for `autoptimize` with `content-type: application/zip` and `x-source: R2`.
+
+```bash
+cat /home/nginx/domains/plugins.domain.com/plugin-logs/autoptimize.3.1.12.headers
+
+HTTP/2 200 
+date: Wed, 02 Oct 2024 21:10:11 GMT
+content-type: application/zip
+content-length: 264379
+access-control-allow-origin: *
+cache-control: public, max-age=3600
+content-disposition: attachment; filename="autoptimize.3.1.12.zip"
+content-encoding: identity
+access-control-allow-headers: Content-Type
+access-control-allow-methods: GET, OPTIONS
+x-source: R2
+x-suggested-filename: autoptimize.3.1.12.zip
+server: cloudflare
+cf-ray: 8cc7ad8048d87e9c-LAX
 ```
 
 Mirrored and locally cached in Cloudflare R2 bucket plugin JSON metadata where `api.mycloudflareproxy_domain.com` is Cloudflare orange cloud proxy enabled domain zone hostname enabled for Cloudflare R2 bucket public access for `WP_PLUGIN_INFO` bucket referenced in Cloudflare Worker that `get_plugins_r2.sh` talks to.
