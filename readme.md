@@ -12,9 +12,19 @@ The WordPress Plugin Mirror Downloader is a sophisticated system designed to eff
 
 ### Key Components
 
-1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage).
+1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindibgs to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/.
 
-2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON.
+2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON. Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage. See Cloudflare R2 pricing https://developers.cloudflare.com/r2/platform/pricing/ and calculator at https://r2-calculator.cloudflare.com/.
+
+Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
+
+| Feature | Forever Free | Standard Storage | Infrequent Access Storage (Beta) |
+|---------|--------------|-------------------|----------------------------------|
+| Storage | 10 GB / month | $0.015 / GB-month | $0.01 / GB-month |
+| Class A operations: mutate state | 1,000,000 / month | $4.50 / million requests | $9.00 / million requests |
+| Class B operations: read existing state | 10,000,000 / month | $0.36 / million requests | $0.90 / million requests |
+| Data Retrieval (processing) | N/A | None | $0.01 / GB |
+| Egress (data transfer to Internet) | N/A | Free | Free |
 
 3. **Bash Script**: A local client that orchestrates the plugin download process, interacts with the WordPress API, and communicates with the Cloudflare Worker.
 
