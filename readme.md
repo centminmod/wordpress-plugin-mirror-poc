@@ -2,11 +2,11 @@
 
 ## Table of Contents
 1. [Introduction](#introduction)
-  * [SVN Mirroring](#svn-mirroring)
-    * [Using csync2 cluster](#using-csync2-cluster)
-  * [Key Components](#key-components)
-  * [System Advantages](#system-advantages)
-  * [Cloudflare Related Costs](#cloudflare-related-costs)
+   * [SVN Mirroring](#svn-mirroring)
+     * [Using csync2 cluster](#using-csync2-cluster)
+   * [Key Components](#key-components)
+   * [System Advantages](#system-advantages)
+   * [Cloudflare Related Costs](#cloudflare-related-costs)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
 4. [Screenshots](#screenshots)
