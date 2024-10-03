@@ -233,7 +233,7 @@ Total Cost Breakdown:
 
 - R2 Storage: $3.75
 - R2 Write Operations: $27.81
-- R2 Read Operations: $3,600.00
+- R2 Read Operations: $3,600.00 (reduced pricing if implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files)
 - Cloudflare Worker Requests: $2,997.00
 - Cloudflare Worker CPU time: $599.40
 - Cloudflare Worker Subscription fee: $5.00
