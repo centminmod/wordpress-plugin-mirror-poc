@@ -93,6 +93,8 @@ Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
 | Data Retrieval (processing) | N/A | None | $0.01 / GB |
 | Egress (data transfer to Internet) | N/A | Free | Free |
 
+The below first three examples have much higher R2 write estimations. With forth example probably closer to WordPress Plugin zip file mirroring.
+
 #### Example 1 - cost calculation for:
 
 * 250GB of R2 storage with 5 million write and 25 million read operations 
@@ -163,6 +165,10 @@ Total Monthly Cost: $388.90 per month
 
 #### Example 3 - extra large cost calculation for:
 
+- 2000GB of R2 storage
+- 500 million write operations and 250 million read operations on R2
+- Cloudflare Worker handling 1 billion requests, averaging 3ms CPU time per request
+
 1. R2 Storage Costs
    - Storage: 5000 GB at $0.015 per GB-month
    - 5000 * $0.015 = $75.00 per month
@@ -194,6 +200,46 @@ Total Cost Breakdown:
 - Cloudflare Worker Subscription fee: $5.00
 
 Total Monthly Cost: $3,586.40 per month
+
+#### Example 4 - more realistic R2 Writes:
+
+There are ~103K Wordpress plugins as of writing. If each plugin would consistently release a new version per day for 30 days, there would be 2x 103,000 R2 writes/day - one for R2 write for zip file and one for R2 write for JSON metadata file = 206,000/day = 6.18 million R2 writes per month. Obviously, not every plugin would be releasing a new version every day for an entire month.
+
+- 250GB of R2 storage with 5 million write and 25 million read operations 
+- 6.18 million R2 write operations and 10 billion read operations on R2
+- Cloudflare Worker handling 10 billion requests, averaging 3ms CPU time per request
+
+1. R2 Storage Costs
+   - Storage: 250 GB at $0.015 per GB-month
+   - 250 * $0.015 = $3.75 per month
+
+2. R2 Operations
+   - Write operations (Class A): 6.18 million at $4.50 per million
+   - 6.18 * $4.50 = $27.81 per month
+   - Read operations (Class B): 10 billion at $0.36 per million
+   - 10000 * $0.36 = $3,600.00 per month
+
+3. Cloudflare Worker
+   - Requests: 10 billion
+    - First 10 million included in Standard tier
+    - Additional 9990 million at $0.30 per million
+    - 9990 * $0.30 = $2,997.00 per month
+   - CPU time: 10 billion * 3ms = 30 billion CPU milliseconds
+    - First 30 million CPU milliseconds included
+    - Additional 29,970 million at $0.02 per million
+    - 29970 * $0.02 = $599.40 per month
+   - $5/month subscription fee
+
+Total Cost Breakdown:
+
+- R2 Storage: $3.75
+- R2 Write Operations: $27.81
+- R2 Read Operations: $3,600.00
+- Cloudflare Worker Requests: $2,997.00
+- Cloudflare Worker CPU time: $599.40
+- Cloudflare Worker Subscription fee: $5.00
+
+Total Monthly Cost: $7,232.96 per month
 
 ## System Overview
 
