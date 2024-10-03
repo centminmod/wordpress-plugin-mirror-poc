@@ -10,8 +10,8 @@
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
-   * [cached plugin](#cached-plugin)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
+   * [Cached Plugin](#cached-plugin)
    * [wget download speed test](#wget-download-speed-test)
 4. [Screenshots](#screenshots)
 
@@ -681,7 +681,7 @@ This mirrored and locally cached JSON metadata endpoint `https://api.mycloudflar
   ]
   ```
 
-### cached plugin
+### Cached Plugin
 
 Example of Cloudflare CDN cached plugin compared to Wordpress plugin download.
 
