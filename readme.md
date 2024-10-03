@@ -207,7 +207,7 @@ Total Monthly Cost: $3,586.40 per month
 
 There are ~103K Wordpress plugins as of writing. If each plugin would consistently release a new version per day for 30 days, there would be 2x 103,000 R2 writes/day - one for R2 write for zip file and one for R2 write for JSON metadata file = 206,000/day = 6.18 million R2 writes per month. Obviously, not every plugin would be releasing a new version every day for an entire month.
 
-- 250GB of R2 storage with 6.18 million write and 10 billion read operations. Note, if you implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files, you won't get anywhere near 10 bliion read operations in reality.
+- 250GB of R2 storage with 6.18 million write and 10 billion read operations. Note, if you implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files, you won't get anywhere near 10 bliion read operations in reality. Example of Cloudflare CDN cached mirrored WordPress plugin [here](#cached-plugin).
 - Cloudflare Worker handling 10 billion requests, averaging 3ms CPU time per request
 
 1. R2 Storage Costs
@@ -504,6 +504,49 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.js
   "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
   "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
 ]
+```
+
+### cached plugin
+
+Example of Cloudflare CDN cached plugin compared to Wordpress plugin download.
+
+Cloudflare CDN cached
+
+```
+curl -I https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+HTTP/2 200 
+date: Thu, 03 Oct 2024 05:50:14 GMT
+content-type: application/zip
+content-length: 264379
+etag: "49dbcac863d2ec3e3ff4675064a943ec"
+last-modified: Tue, 01 Oct 2024 16:06:26 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 4
+expires: Sun, 03 Nov 2024 05:50:14 GMT
+cache-control: public, max-age=2678400
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8ccaa74b58c37cc7-LAX
+```
+
+Original Wordpress plugin
+
+```
+curl -I https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+HTTP/1.1 200 OK
+Server: nginx
+Date: Thu, 03 Oct 2024 05:48:34 GMT
+Content-Type: application/octet-stream
+Content-Length: 264379
+Connection: close
+Content-Disposition: attachment; filename=autoptimize.3.1.12.zip
+Last-Modified: Thu, 25 Jul 2024 17:15:10 GMT
+Accept-Ranges: bytes
+Access-Control-Allow-Methods: GET, HEAD
+Access-Control-Allow-Origin: *
+Alt-Svc: h3=":443"; ma=86400
+X-nc: MISS ord 7
 ```
 
 Full mirrored WordPress plugin JSON metadata:
