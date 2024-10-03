@@ -209,6 +209,7 @@ There are ~103K Wordpress plugins as of writing. If each plugin would consistent
 
 - 250GB of R2 storage with 6.18 million write and 10 billion read operations. Note, if you implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files, you won't get anywhere near 10 bliion read operations in reality. Example of Cloudflare CDN cached mirrored WordPress plugin [here](#cached-plugin).
 - Cloudflare Worker handling 10 billion requests, averaging 3ms CPU time per request
+- R2 read and write operations also haven't accounted for my script's inspection of the R2 buckets' respective contents.
 
 1. R2 Storage Costs
    - Storage: 250 GB at $0.015 per GB-month
