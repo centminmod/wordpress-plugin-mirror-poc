@@ -205,7 +205,7 @@ Total Monthly Cost: $3,586.40 per month
 
 There are ~103K Wordpress plugins as of writing. If each plugin would consistently release a new version per day for 30 days, there would be 2x 103,000 R2 writes/day - one for R2 write for zip file and one for R2 write for JSON metadata file = 206,000/day = 6.18 million R2 writes per month. Obviously, not every plugin would be releasing a new version every day for an entire month.
 
-- 250GB of R2 storage with 6.18 million write and 10 billion read operations 
+- 250GB of R2 storage with 6.18 million write and 10 billion read operations. Note, if you implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files, you won't get anywhere near 10 bliion read operations in reality.
 - Cloudflare Worker handling 10 billion requests, averaging 3ms CPU time per request
 
 1. R2 Storage Costs
