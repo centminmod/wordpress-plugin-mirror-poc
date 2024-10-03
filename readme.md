@@ -71,6 +71,8 @@ WordPress SVN repos:
 
 ### Cloudflare Related Costs
 
+Cloudflare CDN is free of charge, so only costs will be related to using Cloudflare Workers and Cloudflare R2 S3 object storage as outlined below.
+
 For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
 
 | Tier | Requests¹ ² | Duration | CPU time |
