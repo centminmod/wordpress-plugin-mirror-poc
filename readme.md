@@ -14,9 +14,11 @@
 
 ## Introduction
 
-The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Cloudflare Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/.
+The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Cloudflare Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/. 
 
-This method only focuses on mirroring and downloading WordPress Plugin zip files itself instead of mirroring the entire WordPress plugin SVN repository. The reason is SVN repositories contain the history of all commits and versions for a WordPress plugin so involve alot more files and data size/transfer is larger. 
+Given [Cloudflare CDN cached WordPress plugin download benchmarks speeds](#cached-plugin) with 43x times faster downlaod speed and 82% faster latency than plugin served from Wordpress.org, Matt Mullenweg should take up Cloudflare CEO, Mathhew Prince's [offer of donating capacity to Wordpress.org](https://x.com/eastdakota/status/1841154152006627663?t=L0e-TL1cPhkgckxPDG6nvg&s=19). Would dramatically cut Wordpres.org's infrastructure running costs and speed up file downloads. :sunglasses:
+
+The below POC method only focuses on mirroring and downloading WordPress Plugin zip files itself instead of mirroring the entire WordPress plugin SVN repository. The reason is SVN repositories contain the history of all commits and versions for a WordPress plugin so involve alot more files and data size/transfer is larger. 
 
 Disclaimer, I am a Cloudflare customer since 2011 and official Cloudflare community MVP since 2018 (non-paid similar to how Microsoft MVP program operates) using Cloudflare Free, Pro, Business and Enterprise plans.
 
@@ -714,13 +716,13 @@ Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
 |            | 3 | 0.108014 | 0.630060 | 0.522046 |
 | **Total Avg** |  | **0.106341** | **0.607998** | **0.501657** |
 
-## Notes:
+#### Notes:
 - Times are in seconds (s)
 - Lower times indicate faster performance
 - Cloudflare CDN is consistently faster in most metrics, except for initial DNS lookup
 - Average total time improvement: 0.501657 seconds (approximately 82.5% faster)
 
-## Interpretation:
+#### Interpretation:
 1. **DNS Lookup**: Cloudflare is slightly slower (by ~0.005s), likely due to the additional Cloudflare DNS resolution.
 2. **Connect**: Cloudflare is significantly faster (by ~0.047s), possibly due to closer server proximity.
 3. **SSL**: Cloudflare performs much better (by ~0.146s), likely due to optimized SSL handshake.
@@ -795,6 +797,84 @@ DNS,Connect,SSL,Wait,TTFB,Total Time
         "time_total":           0.630060
 }
 ```
+
+#### Simple wget download speed test
+
+| Source | Run | Download Speed (MB/s) |
+|--------|-----|------------------------|
+| Cloudflare CDN | 1 | 37.8 |
+| Cloudflare CDN | 2 | 46.8 |
+| WordPress.org | 1 | 0.9 |
+| WordPress.org | 2 | 1.05 |
+
+Cloudflare CDN cached
+
+Run 1 = 37.8MB/s
+
+```
+wget -O /dev/null https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+--2024-10-03 10:46:44--  https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+Resolving downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)... 104.xxx.xxx.xxx, 104.xxx.xxx.xxx, 2606:xxxx, ...
+Connecting to downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)|104.xxx.xxx.xxx|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 264379 (258K) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K  --.-KB/s    in 0.007s  
+
+2024-10-03 10:46:44 (37.8 MB/s) - ‘/dev/null’ saved [264379/264379]
+```
+
+Run 2 = 46.8MB/s
+
+```
+wget -O /dev/null https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+--2024-10-03 10:47:09--  https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+Resolving downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)... 104.xxx.xxx.xxx, 104.xxx.xxx.xxx, 2606:xxyy, ...
+Connecting to downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)|104.xxx.xxx.xxx|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 264379 (258K) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K  --.-KB/s    in 0.005s  
+
+2024-10-03 10:47:09 (46.8 MB/s) - ‘/dev/null’ saved [264379/264379]
+```
+
+Original Wordpress plugin
+
+Run 1 = 900KB/s
+
+```
+wget -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 10:46:30--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K   900KB/s    in 0.3s    
+
+2024-10-03 10:46:30 (900 KB/s) - ‘/dev/null’ saved [264379/264379]
+```
+
+Run 2 = 1.05MB/s
+
+```
+wget -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 10:47:05--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K  1.05MB/s    in 0.2s    
+
+2024-10-03 10:47:05 (1.05 MB/s) - ‘/dev/null’ saved [264379/264379
+```
+
 
 Full mirrored WordPress plugin JSON metadata:
 
