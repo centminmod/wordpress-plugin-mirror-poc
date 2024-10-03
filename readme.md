@@ -549,6 +549,113 @@ Alt-Svc: h3=":443"; ma=86400
 X-nc: MISS ord 7
 ```
 
+Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
+
+| Metric | Run | Cloudflare CDN (s) | Original WordPress (s) | Difference (s) |
+|--------|-----|---------------------|------------------------|----------------|
+| DNS Lookup | 1 | 0.017216 | 0.012032 | -0.005184 |
+|            | 2 | 0.017077 | 0.012507 | -0.004570 |
+|            | 3 | 0.017610 | 0.012564 | -0.005046 |
+| **DNS Avg** |  | **0.017301** | **0.012368** | **-0.004933** |
+| Connect | 1 | 0.018738 | 0.065434 | 0.046696 |
+|         | 2 | 0.019041 | 0.066386 | 0.047345 |
+|         | 3 | 0.019858 | 0.066524 | 0.046666 |
+| **Connect Avg** |  | **0.019212** | **0.066115** | **0.046903** |
+| SSL | 1 | 0.043311 | 0.187870 | 0.144559 |
+|     | 2 | 0.042507 | 0.189180 | 0.146673 |
+|     | 3 | 0.042925 | 0.189554 | 0.146629 |
+| **SSL Avg** |  | **0.042914** | **0.188868** | **0.145954** |
+| TTFB | 1 | 0.100405 | 0.416238 | 0.315833 |
+|      | 2 | 0.096419 | 0.248653 | 0.152234 |
+|      | 3 | 0.099871 | 0.364501 | 0.264630 |
+| **TTFB Avg** |  | **0.098898** | **0.343131** | **0.244233** |
+| Total Time | 1 | 0.107244 | 0.665148 | 0.557904 |
+|            | 2 | 0.103766 | 0.528787 | 0.425021 |
+|            | 3 | 0.108014 | 0.630060 | 0.522046 |
+| **Total Avg** |  | **0.106341** | **0.607998** | **0.501657** |
+
+## Notes:
+- Times are in seconds (s)
+- Lower times indicate faster performance
+- Cloudflare CDN is consistently faster in most metrics, except for initial DNS lookup
+- Average total time improvement: 0.501657 seconds (approximately 82.5% faster)
+
+## Interpretation:
+1. **DNS Lookup**: Cloudflare is slightly slower (by ~0.005s), likely due to the additional Cloudflare DNS resolution.
+2. **Connect**: Cloudflare is significantly faster (by ~0.047s), possibly due to closer server proximity.
+3. **SSL**: Cloudflare performs much better (by ~0.146s), likely due to optimized SSL handshake.
+4. **Time to First Byte (TTFB)**: Cloudflare is substantially faster (by ~0.244s), indicating quicker server response.
+5. **Total Time**: Cloudflare CDN delivers the file much faster (by ~0.502s), which is a significant improvement.
+
+Cloudflare CDN cached
+
+```
+./curltimes.sh json https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+curl 7.76.1
+TLSv1.2 ECDHE-ECDSA-CHACHA20-POLY1305
+Connected to downloads.mycloudflareproxy_domain.com (104.xxx.xxx.xxx) port 443 (#0)
+Cloudflare proxied https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+Sample Size: 3
+
+DNS,Connect,SSL,Wait,TTFB,Total Time
+{
+        "time_dns":             0.017216,
+        "time_connect":         0.018738,
+        "time_appconnect":      0.043311,
+        "time_pretransfer":     0.043366,
+        "time_ttfb":            0.100405,
+        "time_total":           0.107244
+}{
+        "time_dns":             0.017077,
+        "time_connect":         0.019041,
+        "time_appconnect":      0.042507,
+        "time_pretransfer":     0.042568,
+        "time_ttfb":            0.096419,
+        "time_total":           0.103766
+}{
+        "time_dns":             0.017610,
+        "time_connect":         0.019858,
+        "time_appconnect":      0.042925,
+        "time_pretransfer":     0.042988,
+        "time_ttfb":            0.099871,
+        "time_total":           0.108014
+}
+
+```
+
+Original Wordpress plugin
+
+```
+./curltimes.sh json https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+TLSv1.2 ECDHE-ECDSA-CHACHA20-POLY1305
+Connected to downloads.wordpress.org (198.143.164.250) port 443 (#0)
+Sample Size: 3
+
+DNS,Connect,SSL,Wait,TTFB,Total Time
+{
+        "time_dns":             0.012032,
+        "time_connect":         0.065434,
+        "time_appconnect":      0.187870,
+        "time_pretransfer":     0.187953,
+        "time_ttfb":            0.416238,
+        "time_total":           0.665148
+}{
+        "time_dns":             0.012507,
+        "time_connect":         0.066386,
+        "time_appconnect":      0.189180,
+        "time_pretransfer":     0.189303,
+        "time_ttfb":            0.248653,
+        "time_total":           0.528787
+}{
+        "time_dns":             0.012564,
+        "time_connect":         0.066524,
+        "time_appconnect":      0.189554,
+        "time_pretransfer":     0.189640,
+        "time_ttfb":            0.364501,
+        "time_total":           0.630060
+}
+```
+
 Full mirrored WordPress plugin JSON metadata:
 
 ```bash
