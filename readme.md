@@ -875,6 +875,112 @@ Saving to: ‘/dev/null’
 2024-10-03 10:47:05 (1.05 MB/s) - ‘/dev/null’ saved [264379/264379
 ```
 
+Looking closer at Wordpress.org download, not even sure they are properly caching the plugin files they are serving?  Looks like caching per datacenter as last test was a HIT - though no difference in download speed. Did 4 additional runs inspecting HTTP response headers and I see, `EXPIRED`, `MISS`, `MISS`, `HIT` statuses respectively for `x-nc` header.
+
+```
+wget -S -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 11:10:17--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Thu, 03 Oct 2024 11:10:18 GMT
+  Content-Type: application/octet-stream
+  Content-Length: 264379
+  Connection: close
+  Content-Disposition: attachment; filename=autoptimize.3.1.12.zip
+  Last-Modified: Thu, 25 Jul 2024 17:15:10 GMT
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: EXPIRED ord 7
+  Accept-Ranges: bytes
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K   875KB/s    in 0.3s    
+
+2024-10-03 11:10:18 (875 KB/s) - ‘/dev/null’ saved [264379/264379]
+```
+```
+wget -S -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 11:10:21--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Thu, 03 Oct 2024 11:10:21 GMT
+  Content-Type: application/octet-stream
+  Content-Length: 264379
+  Connection: close
+  Content-Disposition: attachment; filename=autoptimize.3.1.12.zip
+  Last-Modified: Thu, 25 Jul 2024 17:15:10 GMT
+  Accept-Ranges: bytes
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: MISS ord 4
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K   933KB/s    in 0.3s    
+
+2024-10-03 11:10:22 (933 KB/s) - ‘/dev/null’ saved [264379/264379]
+```
+```
+wget -S -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 11:10:23--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Thu, 03 Oct 2024 11:10:24 GMT
+  Content-Type: application/octet-stream
+  Content-Length: 264379
+  Connection: close
+  Content-Disposition: attachment; filename=autoptimize.3.1.12.zip
+  Last-Modified: Thu, 25 Jul 2024 17:15:10 GMT
+  Accept-Ranges: bytes
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: MISS ord 6
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K  1.03MB/s    in 0.2s    
+
+2024-10-03 11:10:24 (1.03 MB/s) - ‘/dev/null’ saved [264379/264379]
+```
+```
+wget -S -O /dev/null https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+--2024-10-03 11:13:29--  https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Thu, 03 Oct 2024 11:13:29 GMT
+  Content-Type: application/octet-stream
+  Content-Length: 264379
+  Connection: close
+  Content-Disposition: attachment; filename=autoptimize.3.1.12.zip
+  Last-Modified: Thu, 25 Jul 2024 17:15:10 GMT
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: HIT ord 7
+  Accept-Ranges: bytes
+Length: 264379 (258K) [application/octet-stream]
+Saving to: ‘/dev/null’
+
+/dev/null                                      100%[==================================================================================================>] 258.18K  1.05MB/s    in 0.2s    
+
+2024-10-03 11:13:29 (1.05 MB/s) - ‘/dev/null’ saved [264379/264379]
+```
 
 Full mirrored WordPress plugin JSON metadata:
 
