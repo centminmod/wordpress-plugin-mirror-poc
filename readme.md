@@ -10,6 +10,8 @@
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
+   * [cached plugin](#cached-plugin)
+   * [wget download speed test](#wget-download-speed-test)
 4. [Screenshots](#screenshots)
 
 ## Introduction
@@ -798,7 +800,7 @@ DNS,Connect,SSL,Wait,TTFB,Total Time
 }
 ```
 
-#### Simple wget download speed test
+### wget download speed test
 
 | Source | Run | Download Speed (MB/s) |
 |--------|-----|------------------------|
