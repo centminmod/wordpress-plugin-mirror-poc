@@ -10,9 +10,9 @@
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
-   * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
    * [Cached Plugin](#cached-plugin)
    * [wget download speed test](#wget-download-speed-test)
+   * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
 4. [Screenshots](#screenshots)
 
 ## Introduction
@@ -653,34 +653,6 @@ server: cloudflare
 cf-ray: 8cc7ad8048d87e9c-LAX
 ```
 
-### Mirrored WordPress Plugin API End Point
-
-Mirrored and locally cached in Cloudflare R2 bucket plugin JSON metadata where `api.mycloudflareproxy_domain.com` is Cloudflare orange cloud proxy enabled domain zone hostname enabled for Cloudflare R2 bucket public access for `WP_PLUGIN_INFO` bucket referenced in Cloudflare Worker that `get_plugins_r2.sh` talks to.
-
-Also modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
-
-```
-curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.json | jq -r '[.download_link, .download_link_mirror]'
-[
-  "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
-  "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
-]
-```
-
-This mirrored and locally cached JSON metadata endpoint `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/` is also optionally used as the source data url with a **WordPress Plugin 1.2 API Bridge Worker** which is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval
-
-  ```bash
-  curl -s -H "Accept: application/json" "https://api.mycloudflareproxy_domain.com/plugins/info/1.2/?action=plugin_information&slug=autoptimize&locale=en_US" | jq -r '[.name, .slug, .version, .download_link, .tested, .requires_php]'
-  [
-    "Autoptimize",
-    "autoptimize",
-    "3.1.12",
-    "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
-    "6.6.2",
-    "5.6"
-  ]
-  ```
-
 ### Cached Plugin
 
 Example of Cloudflare CDN cached plugin compared to Wordpress plugin download.
@@ -1014,6 +986,34 @@ Saving to: ‘/dev/null’
 
 2024-10-03 11:13:29 (1.05 MB/s) - ‘/dev/null’ saved [264379/264379]
 ```
+
+### Mirrored WordPress Plugin API End Point
+
+Mirrored and locally cached in Cloudflare R2 bucket plugin JSON metadata where `api.mycloudflareproxy_domain.com` is Cloudflare orange cloud proxy enabled domain zone hostname enabled for Cloudflare R2 bucket public access for `WP_PLUGIN_INFO` bucket referenced in Cloudflare Worker that `get_plugins_r2.sh` talks to.
+
+Also modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
+
+```
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.json | jq -r '[.download_link, .download_link_mirror]'
+[
+  "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
+  "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
+]
+```
+
+This mirrored and locally cached JSON metadata endpoint `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/` is also optionally used as the source data url with a **WordPress Plugin 1.2 API Bridge Worker** which is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval
+
+  ```bash
+  curl -s -H "Accept: application/json" "https://api.mycloudflareproxy_domain.com/plugins/info/1.2/?action=plugin_information&slug=autoptimize&locale=en_US" | jq -r '[.name, .slug, .version, .download_link, .tested, .requires_php]'
+  [
+    "Autoptimize",
+    "autoptimize",
+    "3.1.12",
+    "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
+    "6.6.2",
+    "5.6"
+  ]
+  ```
 
 Full mirrored WordPress plugin JSON metadata:
 
