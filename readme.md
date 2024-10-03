@@ -18,7 +18,7 @@ Disclaimer, I am a Cloudflare customer since 2011 and official Cloudflare commun
 
 Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which will be beyond Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage. So there would be additional storage costs - unless you are an open source project under Cloudflare Project Alexandria.
 
-You can also leverage Cloudflare R2 as mounted Linux FUSE mount via JuiceFS with caches metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
+You can also leverage Cloudflare R2 as mounted Linux FUSE mount via JuiceFS which caches file metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up and benchmarks for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
 
 ```
 df -hT /home/juicefs_mount
