@@ -2,6 +2,11 @@
 
 ## Table of Contents
 1. [Introduction](#introduction)
+  * [SVN Mirroring](#svn-mirroring)
+    * [Using csync2 cluster](#using-csync2-cluster)
+  * [Key Components](#key-components)
+  * [System Advantages](#system-advantages)
+  * [Cloudflare Related Costs](#cloudflare-related-costs)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
 4. [Screenshots](#screenshots)
@@ -14,7 +19,7 @@ This method only focuses on mirroring and downloading WordPress Plugin zip files
 
 Disclaimer, I am a Cloudflare customer since 2011 and official Cloudflare community MVP since 2018 (non-paid similar to how Microsoft MVP program operates) using Cloudflare Free, Pro, Business and Enterprise plans.
 
-### SVN Mirroring?
+### SVN Mirroring
 
 Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which will be beyond Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage. So there would be additional storage costs - unless you are an open source project under Cloudflare Project Alexandria.
 
@@ -38,27 +43,9 @@ WordPress SVN repos:
 
 ### Key Components
 
-1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindings to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/. For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
+1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindings to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/.
 
-| Tier | Requests¹ ² | Duration | CPU time |
-|------|-------------|----------|----------|
-| Free | 100,000 per day | No charge for duration | 10 milliseconds of CPU time per invocation |
-| Standard | 10 million included per month<br>+$0.30 per additional million | No charge or limit for duration | 30 million CPU milliseconds included per month<br>+$0.02 per additional million CPU milliseconds<br>Max of 30 seconds of CPU time per invocation<br>Max of 15 minutes of CPU time per [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) or [Queue Consumer](https://developers.cloudflare.com/queues/configuration/javascript-apis/#consumer) invocation |
-
-¹ Inbound requests to your Worker. Cloudflare does not bill for [subrequests](https://developers.cloudflare.com/workers/platform/limits/#subrequests) you make from your Worker.
-² Requests to static assets are free and unlimited.
-
-2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON. Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage. See Cloudflare R2 pricing https://developers.cloudflare.com/r2/platform/pricing/ and calculator at https://r2-calculator.cloudflare.com/.
-
-Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
-
-| Feature | Forever Free | Standard Storage | Infrequent Access Storage (Beta) |
-|---------|--------------|-------------------|----------------------------------|
-| Storage | 10 GB / month | $0.015 / GB-month | $0.01 / GB-month |
-| Class A operations: mutate state | 1,000,000 / month | $4.50 / million requests | $9.00 / million requests |
-| Class B operations: read existing state | 10,000,000 / month | $0.36 / million requests | $0.90 / million requests |
-| Data Retrieval (processing) | N/A | None | $0.01 / GB |
-| Egress (data transfer to Internet) | N/A | Free | Free |
+2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON. Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage.
 
 3. **Bash Script**: A local client that orchestrates the plugin download process, interacts with the WordPress API, and communicates with the Cloudflare Worker.
 
@@ -81,6 +68,98 @@ Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
 - **Separate Caching for ZIP and JSON**: By caching ZIP files and JSON metadata separately, the system can efficiently handle partial updates and reduce storage costs.
 
 - **Cache-Only Mode**: A new feature allows checking and updating the cache and R2 bucket without downloading files, useful for preemptive caching and system checks.
+
+### Cloudflare Related Costs
+
+For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
+
+| Tier | Requests¹ ² | Duration | CPU time |
+|------|-------------|----------|----------|
+| Free | 100,000 per day | No charge for duration | 10 milliseconds of CPU time per invocation |
+| Standard | 10 million included per month<br>+$0.30 per additional million | No charge or limit for duration | 30 million CPU milliseconds included per month<br>+$0.02 per additional million CPU milliseconds<br>Max of 30 seconds of CPU time per invocation<br>Max of 15 minutes of CPU time per [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) or [Queue Consumer](https://developers.cloudflare.com/queues/configuration/javascript-apis/#consumer) invocation |
+
+¹ Inbound requests to your Worker. Cloudflare does not bill for [subrequests](https://developers.cloudflare.com/workers/platform/limits/#subrequests) you make from your Worker.
+² Requests to static assets are free and unlimited.
+
+For Cloudflare R2 pricing https://developers.cloudflare.com/r2/platform/pricing/ and calculator at https://r2-calculator.cloudflare.com/.
+
+Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
+
+| Feature | Forever Free | Standard Storage | Infrequent Access Storage (Beta) |
+|---------|--------------|-------------------|----------------------------------|
+| Storage | 10 GB / month | $0.015 / GB-month | $0.01 / GB-month |
+| Class A operations: mutate state | 1,000,000 / month | $4.50 / million requests | $9.00 / million requests |
+| Class B operations: read existing state | 10,000,000 / month | $0.36 / million requests | $0.90 / million requests |
+| Data Retrieval (processing) | N/A | None | $0.01 / GB |
+| Egress (data transfer to Internet) | N/A | Free | Free |
+
+Example 1 - cost calculation for:
+
+* 250GB of R2 storage with 5 million write and 25 million read operations 
+* Cloudflare Worker for 10 million requests averaging 1.8ms CPU time
+
+1. R2 Storage Costs:
+   - Storage: 250 GB at $0.015 per GB-month
+   - 250 * $0.015 = $3.75 per month
+
+2. R2 Operations:
+   - Write operations (Class A): 5 million at $4.50 per million
+   - 5 * $4.50 = $22.50 per month
+   - Read operations (Class B): 25 million at $0.36 per million
+   - 25 * $0.36 = $9.00 per month
+
+3. Cloudflare Worker:
+   - Requests: 10 million (included in Standard tier)
+   - CPU time: 10 million * 1.8ms = 18 million CPU milliseconds (within the 30 million included)
+   - $5/month subscription fee
+
+Total cost breakdown:
+
+- R2 Storage: $3.75
+- R2 Write Operations: $22.50
+- R2 Read Operations: $9.00
+- Cloudflare Worker usage: $0 (within included limits)
+- Cloudflare Worker Subscription fee: $5
+
+Total monthly cost: $40.25 per month
+
+Example 2 - large cost calculation for:
+
+- 2500GB of R2 storage
+- 50 million write operations and 250 million read operations on R2
+- Cloudflare Worker handling 100 million requests, averaging 2.5ms CPU time per request
+
+1. R2 Storage Costs
+   - Storage: 2500 GB at $0.015 per GB-month
+   - 2500 * $0.015 = $37.50 per month
+
+2. R2 Operations
+   - Write operations (Class A): 50 million at $4.50 per million
+   - 50 * $4.50 = $225.00 per month
+   - Read operations (Class B): 250 million at $0.36 per million
+   - 250 * $0.36 = $90.00 per month
+
+3. Cloudflare Worker
+   - Requests: 100 million
+    - First 10 million included in Standard tier
+    - Additional 90 million at $0.30 per million
+    - 90 * $0.30 = $27.00 per month
+   - CPU time: 100 million * 2.5ms = 250 million CPU milliseconds
+    - First 30 million CPU milliseconds included
+    - Additional 220 million at $0.02 per million
+    - 220 * $0.02 = $4.40 per month
+   - $5/month subscription fee
+
+Total Cost Breakdown:
+
+- R2 Storage: $37.50
+- R2 Write Operations: $225.00
+- R2 Read Operations: $90.00
+- Cloudflare Worker Requests: $27.00
+- Cloudflare Worker CPU time: $4.40
+- Cloudflare Worker Subscription fee: $5.00
+
+Total Monthly Cost: $388.90 per month
 
 ## System Overview
 
