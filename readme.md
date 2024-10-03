@@ -38,7 +38,15 @@ WordPress SVN repos:
 
 ### Key Components
 
-1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindings to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/.
+1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindings to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/. For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
+
+| Tier | Requests¹ ² | Duration | CPU time |
+|------|-------------|----------|----------|
+| Free | 100,000 per day | No charge for duration | 10 milliseconds of CPU time per invocation |
+| Standard | 10 million included per month<br>+$0.30 per additional million | No charge or limit for duration | 30 million CPU milliseconds included per month<br>+$0.02 per additional million CPU milliseconds<br>Max of 30 seconds of CPU time per invocation<br>Max of 15 minutes of CPU time per [Cron Trigger](https://developers.cloudflare.com/workers/configuration/cron-triggers/) or [Queue Consumer](https://developers.cloudflare.com/queues/configuration/javascript-apis/#consumer) invocation |
+
+¹ Inbound requests to your Worker. Cloudflare does not bill for [subrequests](https://developers.cloudflare.com/workers/platform/limits/#subrequests) you make from your Worker.
+² Requests to static assets are free and unlimited.
 
 2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON. Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage. See Cloudflare R2 pricing https://developers.cloudflare.com/r2/platform/pricing/ and calculator at https://r2-calculator.cloudflare.com/.
 
