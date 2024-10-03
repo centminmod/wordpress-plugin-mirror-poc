@@ -7,6 +7,7 @@
    * [Key Components](#key-components)
    * [System Advantages](#system-advantages)
    * [Cloudflare Related Costs](#cloudflare-related-costs)
+     * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
 4. [Screenshots](#screenshots)
@@ -242,6 +243,144 @@ Total Cost Breakdown:
 - Cloudflare Worker Subscription fee: $5.00
 
 Total Monthly Cost: $7,232.96 per month
+
+#### Cloudflare R2 GraphQL Metrics
+
+We can also inspect [Cloudflare R2 metrics](https://developers.cloudflare.com/r2/platform/metrics-analytics/) via their [Cloudflare GraphQL API](https://developers.cloudflare.com/analytics/graphql-api/) for R2 read/writes (`GetObject`/`PutObject`).
+
+```bash
+export ACCOUNT_ID='YOUR_CLOUDFLARE_ACCOUNT_ID'
+export API_TOKEN='YOUR_CF_API_TOKEN'
+export BUCKET_NAME='YOUR_R2_BUCKET_NAME'
+```
+
+```bash
+./query_r2_graphql.sh
+GraphQL query saved to r2_graphql_query.graphql
+Checking last 30 minutes...
+No metrics found.
+
+Checking last 60 minutes...
+No metrics found.
+
+Checking last 120 minutes...
+Metrics found!
+
+Checking last 360 minutes...
+Metrics found!
+
+Checking last 720 minutes...
+Metrics found!
+
+Checking last 1440 minutes...
+Metrics found!
+
+Checking last 2880 minutes...
+Metrics found!
+
+Checking last 4320 minutes...
+Metrics found!
+
+Comprehensive Summary:
+
+Last 30 minutes:
+No metrics found
+
+Last 60 minutes:
+No metrics found
+
+Last 120 minutes:
+Querying data from 2024-10-03T07:52:46Z to 2024-10-03T09:52:46Z
+GetObject: 1
+PutObject: 1
+
+Last 360 minutes:
+Querying data from 2024-10-03T03:52:46Z to 2024-10-03T09:52:46Z
+GetObject: 3
+PutObject: 1
+
+Last 720 minutes:
+Querying data from 2024-10-02T21:52:47Z to 2024-10-03T09:52:47Z
+GetObject: 3
+PutObject: 1
+
+Last 1440 minutes:
+Querying data from 2024-10-02T09:52:47Z to 2024-10-03T09:52:47Z
+GetObject: 1174
+PutObject: 312
+
+Last 2880 minutes:
+Querying data from 2024-10-01T09:52:47Z to 2024-10-03T09:52:47Z
+GetObject: 2245
+PutObject: 570
+
+Last 4320 minutes:
+Querying data from 2024-09-30T09:52:48Z to 2024-10-03T09:52:48Z
+GetObject: 2263
+PutObject: 600
+
+Conclusion:
+Metrics were found in at least one time range.
+Most recent activity: Last 120 minutes
+
+Activity summary:
+  PutObject: 600
+  GetObject: 2263
+  Querying data from 2024-09-30T09:52:48Z to 2024-10-03T09:52:48Z
+- Last 4320 minutes:
+  PutObject: 570
+  GetObject: 2245
+  Querying data from 2024-10-01T09:52:47Z to 2024-10-03T09:52:47Z
+- Last 2880 minutes:
+  PutObject: 312
+  GetObject: 1174
+  Querying data from 2024-10-02T09:52:47Z to 2024-10-03T09:52:47Z
+- Last 1440 minutes:
+  PutObject: 1
+  GetObject: 3
+  Querying data from 2024-10-02T21:52:47Z to 2024-10-03T09:52:47Z
+- Last 720 minutes:
+  PutObject: 1
+  GetObject: 3
+  Querying data from 2024-10-03T03:52:46Z to 2024-10-03T09:52:46Z
+- Last 360 minutes:
+  PutObject: 1
+  GetObject: 1
+  Querying data from 2024-10-03T07:52:46Z to 2024-10-03T09:52:46Z
+- Last 120 minutes:
+
+Trend analysis:
+No activity in the last hour. Consider investigating if this is unexpected.
+Significant activity in the last 24 hours. Review the 24-hour metrics for a comprehensive overview.
+Activity detected in the last 72 hours. Compare with 24-hour and 48-hour metrics to identify trends.
+```
+
+The `r2_graphql_query.graphql` query used - adjusting the `START_DATE` and `END_DATE` for 30, 60, 120, 360, 720, 1440, 2880, 4320 durations in minutes.
+
+```graphql
+query R2ReadWriteOperations($ACCOUNT_ID: String!, $START_DATE: Time!, $END_DATE: Time!, $BUCKET_NAME: String) {
+  viewer {
+    accounts(filter: { accountTag: $ACCOUNT_ID }) {
+      r2OperationsAdaptiveGroups(
+        limit: 10000
+        filter: {
+          datetime_geq: $START_DATE
+          datetime_leq: $END_DATE
+          bucketName: $BUCKET_NAME
+          actionType_in: ["GetObject", "PutObject", "CreateMultipartUpload", "UploadPart", "CompleteMultipartUpload"]
+        }
+      ) {
+        sum {
+          requests
+        }
+        dimensions {
+          actionType
+        }
+      }
+    }
+  }
+}
+```
 
 ## System Overview
 
