@@ -93,7 +93,7 @@ Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
 | Data Retrieval (processing) | N/A | None | $0.01 / GB |
 | Egress (data transfer to Internet) | N/A | Free | Free |
 
-Example 1 - cost calculation for:
+#### Example 1 - cost calculation for:
 
 * 250GB of R2 storage with 5 million write and 25 million read operations 
 * Cloudflare Worker for 10 million requests averaging 1.8ms CPU time
@@ -123,7 +123,7 @@ Total cost breakdown:
 
 Total monthly cost: $40.25 per month
 
-Example 2 - large cost calculation for:
+#### Example 2 - large cost calculation for:
 
 - 2500GB of R2 storage
 - 50 million write operations and 250 million read operations on R2
@@ -160,6 +160,40 @@ Total Cost Breakdown:
 - Cloudflare Worker Subscription fee: $5.00
 
 Total Monthly Cost: $388.90 per month
+
+#### Example 3 - extra large cost calculation for:
+
+1. R2 Storage Costs
+   - Storage: 5000 GB at $0.015 per GB-month
+   - 5000 * $0.015 = $75.00 per month
+
+2. R2 Operations
+   - Write operations (Class A): 500 million at $4.50 per million
+   - 500 * $4.50 = $2,250.00 per month
+   - Read operations (Class B): 2.5 billion at $0.36 per million
+   - 2500 * $0.36 = $900.00 per month
+
+3. Cloudflare Worker
+   - Requests: 1 billion
+    - First 10 million included in Standard tier
+    - Additional 990 million at $0.30 per million
+    - 990 * $0.30 = $297.00 per month
+   - CPU time: 1 billion * 3ms = 3 billion CPU milliseconds
+    - First 30 million CPU milliseconds included
+    - Additional 2,970 million at $0.02 per million
+    - 2970 * $0.02 = $59.40 per month
+   - $5/month subscription fee
+
+Total Cost Breakdown:
+
+- R2 Storage: $75.00
+- R2 Write Operations: $2,250.00
+- R2 Read Operations: $900.00
+- Cloudflare Worker Requests: $297.00
+- Cloudflare Worker CPU time: $59.40
+- Cloudflare Worker Subscription fee: $5.00
+
+Total Monthly Cost: $3,586.40 per month
 
 ## System Overview
 
