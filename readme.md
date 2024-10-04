@@ -52,7 +52,7 @@ WordPress SVN repos:
 
 1. **Cloudflare Worker**: A serverless JavaScript function that acts as an intermediary between the client (bash script) and the data sources (WordPress.org and Cloudflare R2 storage). See https://developers.cloudflare.com/workers/ and https://developers.cloudflare.com/workers/tutorials/. And how Cloudflare Workers have bindings to other Cloudflare products like Cloudflare R2 S3 object storage https://developers.cloudflare.com/workers/runtime-apis/bindings/.
 
-2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache plugin ZIP files and metadata JSON. Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage.
+2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache [plugin ZIP files](#cached-plugin), [ZIP file checksums](#mirrored-plugin-checksums) and [plugin JSON metadata](#mirrored-wordpress-plugin-api-end-point). Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage.
 
 3. **Bash Script**: A local client that orchestrates the plugin download process, interacts with the WordPress API, and communicates with the Cloudflare Worker.
 
