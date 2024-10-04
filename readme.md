@@ -58,7 +58,7 @@ WordPress SVN repos:
 
 ### System Advantages
 
-- **Efficient Caching**: By utilizing Cloudflare R2 storage, the system significantly reduces the load on WordPress servers and improves download speeds for frequently requested plugins.
+- **Efficient Caching**: By utilizing Cloudflare R2 storage, the system significantly reduces the load on WordPress servers and improves download speeds for frequently requested plugins. See [Cloudflare CDN cached plugin benchmarks](#cached-plugin).
 
 - **Version Tracking**: The system maintains a local record of installed plugin versions, enabling selective updates and reducing unnecessary downloads.
 
