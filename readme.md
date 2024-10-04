@@ -18,7 +18,7 @@
 
 ## Introduction
 
-The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Cloudflare Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/. 
+The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It's my proof of concept attempt and hope it inspires others to find their own solutions for a fallback backup alternative to wordpress.org in case of downtime. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Cloudflare Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/. 
 
 Given [Cloudflare CDN cached WordPress plugin download benchmarks speeds](#cached-plugin) with 43x times faster download speed and 82% faster latency than plugin served from Wordpress.org, Matt Mullenweg should take up Cloudflare CEO, Matthew Prince's [offer of donating capacity to Wordpress.org](https://x.com/eastdakota/status/1841154152006627663?t=L0e-TL1cPhkgckxPDG6nvg&s=19). Would dramatically cut Wordpres.org's infrastructure running costs and speed up file downloads. :sunglasses:
 
