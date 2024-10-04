@@ -10,6 +10,7 @@
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
+   * [Mirrored Plugin Checksums](#mirrored-plugin-checksums)
    * [Cached Plugin](#cached-plugin)
    * [wget download speed test](#wget-download-speed-test)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
@@ -71,9 +72,11 @@ WordPress SVN repos:
 
 - **Compression Support**: The Worker supports gzip compression, reducing bandwidth usage and improving download speeds.
 
-- **Separate Caching for ZIP and JSON**: By caching ZIP files and JSON metadata separately, the system can efficiently handle partial updates and reduce storage costs.
+- **Separate Caching for ZIP, JSON, and Checksums**: By caching ZIP files, JSON metadata, and checksums separately, the system can efficiently handle partial updates and reduce storage costs.
 
 - **Cache-Only Mode**: A new feature allows checking and updating the cache and R2 bucket without downloading files, useful for preemptive caching and system checks.
+
+- **Checksum Verification**: The system now fetches and stores plugin checksums, enabling integrity verification of downloaded files.
 
 - **WordPress Plugin 1.2 API Bridge Worker**: An additional WordPress Plugin API Bridge Worker is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval
 
@@ -453,107 +456,232 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
     - When activated, this mode allows the system to check and update the cache and R2 bucket without downloading files.
     - It's useful for preemptive caching, system checks, and reducing unnecessary downloads.
 
+12. **Plugin Checksum Verification**:
+    - The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
+
+    #### How it works:
+
+    1. The system fetches official checksums from WordPress.org for each plugin.
+    2. Checksums are stored in the R2 bucket alongside plugin files and metadata.
+    3. Users can verify downloaded plugins against these checksums to ensure file integrity.
+
+    #### Benefits:
+
+    - Detect potentially tampered or corrupted plugin files
+    - Enhance overall security of the plugin management process
+    - Provide an additional layer of verification for cached plugins
+
+    #### Usage:
+
+    To manually verify a plugin's checksums:
+
+    1. Fetch the checksums:
+       ```bash
+       curl -s "https://your-worker-url.workers.dev?plugin=plugin-name&version=version&type=checksums" > checksums.json
+       ```
+
+    2. Use a tool like `jq` to parse the JSON and compare checksums:
+       ```bash
+       jq -r '.files[] | "\(.md5)  \(.filename)"' checksums.json > checksums.md5
+       md5sum -c checksums.md5
+       ```
+
 This architecture allows for efficient, scalable, and resilient WordPress plugin management, leveraging the strengths of edge computing and distributed storage to create a robust mirroring system.
 
 ## Examples
 
+This example shows the WordPress plugins chosen to be downloaded were retrieved from existing Cloudflare R2 S3 object storage bucket instead of from WordPress.org as they were previously downloaded and cached.
+
 ```bash
-time ./get_plugins_r2.sh -d
+time ./get_plugins_r2.sh -p 1 -d
 
 Processing plugin: advanced-custom-fields
 [DEBUG] Checking latest version and download link for advanced-custom-fields
 [DEBUG] Latest version for advanced-custom-fields: 6.3.6
 [DEBUG] API download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.zip
 [DEBUG] Stored version for advanced-custom-fields: 6.3.6
-advanced-custom-fields is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.zip
+[DEBUG] Constructed download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.zip
+[DEBUG] Using API-provided download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.zip
+[DEBUG] Downloading advanced-custom-fields version 6.3.6 through Cloudflare Worker
+[DEBUG] Successfully downloaded advanced-custom-fields version 6.3.6 from R2 storage
+Successfully processed advanced-custom-fields.
+Time taken for advanced-custom-fields: 0.8319 seconds
 [DEBUG] Saving plugin json metadata for advanced-custom-fields version 6.3.6
 [DEBUG] json metadata for advanced-custom-fields version 6.3.6 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for advanced-custom-fields.
+[DEBUG] Fetching and saving checksums for advanced-custom-fields version 6.3.6
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=advanced-custom-fields&version=6.3.6&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for advanced-custom-fields version 6.3.6 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for advanced-custom-fields.
 Processing plugin: akismet
 [DEBUG] Checking latest version and download link for akismet
 [DEBUG] Latest version for akismet: 5.3.3
 [DEBUG] API download link for akismet: https://downloads.wordpress.org/plugin/akismet.5.3.3.zip
 [DEBUG] Stored version for akismet: 5.3.3
-akismet is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for akismet: https://downloads.wordpress.org/plugin/akismet.5.3.3.zip
+[DEBUG] Constructed download link for akismet: https://downloads.wordpress.org/plugin/akismet.5.3.3.zip
+[DEBUG] Using API-provided download link for akismet: https://downloads.wordpress.org/plugin/akismet.5.3.3.zip
+[DEBUG] Downloading akismet version 5.3.3 through Cloudflare Worker
+[DEBUG] Successfully downloaded akismet version 5.3.3 from R2 storage
+Successfully processed akismet.
+Time taken for akismet: 0.3040 seconds
 [DEBUG] Saving plugin json metadata for akismet version 5.3.3
 [DEBUG] json metadata for akismet version 5.3.3 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for akismet.
+[DEBUG] Fetching and saving checksums for akismet version 5.3.3
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=akismet&version=5.3.3&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for akismet version 5.3.3 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for akismet.
 Processing plugin: amr-cron-manager
 [DEBUG] Checking latest version and download link for amr-cron-manager
 [DEBUG] Latest version for amr-cron-manager: 2.3
 [DEBUG] API download link for amr-cron-manager: https://downloads.wordpress.org/plugin/amr-cron-manager.2.3.zip
 [DEBUG] Stored version for amr-cron-manager: 2.3
-amr-cron-manager is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for amr-cron-manager: https://downloads.wordpress.org/plugin/amr-cron-manager.2.3.zip
+[DEBUG] Constructed download link for amr-cron-manager: https://downloads.wordpress.org/plugin/amr-cron-manager.2.3.zip
+[DEBUG] Using API-provided download link for amr-cron-manager: https://downloads.wordpress.org/plugin/amr-cron-manager.2.3.zip
+[DEBUG] Downloading amr-cron-manager version 2.3 through Cloudflare Worker
+[DEBUG] Successfully downloaded amr-cron-manager version 2.3 from R2 storage
+Successfully processed amr-cron-manager.
+Time taken for amr-cron-manager: 0.5523 seconds
 [DEBUG] Saving plugin json metadata for amr-cron-manager version 2.3
 [DEBUG] json metadata for amr-cron-manager version 2.3 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for amr-cron-manager.
+[DEBUG] Fetching and saving checksums for amr-cron-manager version 2.3
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=amr-cron-manager&version=2.3&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for amr-cron-manager version 2.3 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for amr-cron-manager.
 Processing plugin: assets-manager
 [DEBUG] Checking latest version and download link for assets-manager
 [DEBUG] Latest version for assets-manager: 1.0.2
 [DEBUG] API download link for assets-manager: https://downloads.wordpress.org/plugin/assets-manager.zip
 [DEBUG] Stored version for assets-manager: 1.0.2
-assets-manager is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for assets-manager: https://downloads.wordpress.org/plugin/assets-manager.zip
+[DEBUG] Constructed download link for assets-manager: https://downloads.wordpress.org/plugin/assets-manager.1.0.2.zip
+[DEBUG] Using API-provided download link for assets-manager: https://downloads.wordpress.org/plugin/assets-manager.zip
+[DEBUG] Downloading assets-manager version 1.0.2 through Cloudflare Worker
+[DEBUG] Successfully downloaded assets-manager version 1.0.2 from R2 storage
+Successfully processed assets-manager.
+Time taken for assets-manager: 0.4126 seconds
 [DEBUG] Saving plugin json metadata for assets-manager version 1.0.2
 [DEBUG] json metadata for assets-manager version 1.0.2 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for assets-manager.
+[DEBUG] Fetching and saving checksums for assets-manager version 1.0.2
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=assets-manager&version=1.0.2&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for assets-manager version 1.0.2 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for assets-manager.
 Processing plugin: autoptimize
 [DEBUG] Checking latest version and download link for autoptimize
 [DEBUG] Latest version for autoptimize: 3.1.12
 [DEBUG] API download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
 [DEBUG] Stored version for autoptimize: 3.1.12
-autoptimize is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Constructed download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Using API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Downloading autoptimize version 3.1.12 through Cloudflare Worker
+[DEBUG] Successfully downloaded autoptimize version 3.1.12 from R2 storage
+Successfully processed autoptimize.
+Time taken for autoptimize: 0.2655 seconds
 [DEBUG] Saving plugin json metadata for autoptimize version 3.1.12
 [DEBUG] json metadata for autoptimize version 3.1.12 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for autoptimize.
+[DEBUG] Fetching and saving checksums for autoptimize version 3.1.12
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=autoptimize&version=3.1.12&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for autoptimize version 3.1.12 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for autoptimize.
 Processing plugin: better-search-replace
 [DEBUG] Checking latest version and download link for better-search-replace
 [DEBUG] Latest version for better-search-replace: 1.4.7
 [DEBUG] API download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.zip
 [DEBUG] Stored version for better-search-replace: 1.4.7
-better-search-replace is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.zip
+[DEBUG] Constructed download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.1.4.7.zip
+[DEBUG] Using API-provided download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.zip
+[DEBUG] Downloading better-search-replace version 1.4.7 through Cloudflare Worker
+[DEBUG] Successfully downloaded better-search-replace version 1.4.7 from R2 storage
+Successfully processed better-search-replace.
+Time taken for better-search-replace: 0.3155 seconds
 [DEBUG] Saving plugin json metadata for better-search-replace version 1.4.7
 [DEBUG] json metadata for better-search-replace version 1.4.7 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for better-search-replace.
+[DEBUG] Fetching and saving checksums for better-search-replace version 1.4.7
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=better-search-replace&version=1.4.7&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for better-search-replace version 1.4.7 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for better-search-replace.
 Processing plugin: cache-enabler
 [DEBUG] Checking latest version and download link for cache-enabler
 [DEBUG] Latest version for cache-enabler: 1.8.15
 [DEBUG] API download link for cache-enabler: https://downloads.wordpress.org/plugin/cache-enabler.1.8.15.zip
 [DEBUG] Stored version for cache-enabler: 1.8.15
-cache-enabler is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for cache-enabler: https://downloads.wordpress.org/plugin/cache-enabler.1.8.15.zip
+[DEBUG] Constructed download link for cache-enabler: https://downloads.wordpress.org/plugin/cache-enabler.1.8.15.zip
+[DEBUG] Using API-provided download link for cache-enabler: https://downloads.wordpress.org/plugin/cache-enabler.1.8.15.zip
+[DEBUG] Downloading cache-enabler version 1.8.15 through Cloudflare Worker
+[DEBUG] Successfully downloaded cache-enabler version 1.8.15 from R2 storage
+Successfully processed cache-enabler.
+Time taken for cache-enabler: 0.5615 seconds
 [DEBUG] Saving plugin json metadata for cache-enabler version 1.8.15
 [DEBUG] json metadata for cache-enabler version 1.8.15 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for cache-enabler.
+[DEBUG] Fetching and saving checksums for cache-enabler version 1.8.15
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=cache-enabler&version=1.8.15&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for cache-enabler version 1.8.15 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for cache-enabler.
 Processing plugin: classic-editor
 [DEBUG] Checking latest version and download link for classic-editor
 [DEBUG] Latest version for classic-editor: 1.6.5
 [DEBUG] API download link for classic-editor: https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip
 [DEBUG] Stored version for classic-editor: 1.6.5
-classic-editor is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] API-provided download link for classic-editor: https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip
+[DEBUG] Constructed download link for classic-editor: https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip
+[DEBUG] Using API-provided download link for classic-editor: https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip
+[DEBUG] Downloading classic-editor version 1.6.5 through Cloudflare Worker
+[DEBUG] Successfully downloaded classic-editor version 1.6.5 from R2 storage
+Successfully processed classic-editor.
+Time taken for classic-editor: 0.3234 seconds
 [DEBUG] Saving plugin json metadata for classic-editor version 1.6.5
 [DEBUG] json metadata for classic-editor version 1.6.5 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for classic-editor.
+[DEBUG] Fetching and saving checksums for classic-editor version 1.6.5
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=classic-editor&version=1.6.5&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for classic-editor version 1.6.5 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for classic-editor.
 Plugin download process completed.
 
-real    0m3.881s
-user    0m0.374s
-sys     0m0.163s
+real    0m23.510s
+user    0m0.700s
+sys     0m0.324s
 ```
 
-Skipped download as `get_plugins_r2.sh` previously already downloaded these WordPress plugins
-
-
 ```bash
-ls -lahrt /home/nginx/domains/plugins.domain.com/public/ 
-total 6.5M
+ls -lahrt /home/nginx/domains/plugins.domain.com/public/
+total 6.6M
 drwxr-sr-x 4 root nginx   39 Sep 30 12:56 ..
--rw-r--r-- 1 root nginx 5.9M Sep 30 18:28 advanced-custom-fields.6.3.6.zip
--rw-r--r-- 1 root nginx 101K Sep 30 18:28 akismet.5.3.3.zip
--rw-r--r-- 1 root nginx 8.9K Sep 30 18:28 amr-cron-manager.2.3.zip
--rw-r--r-- 1 root nginx  18K Sep 30 18:28 assets-manager.1.0.2.zip
--rw-r--r-- 1 root nginx 248K Sep 30 18:28 autoptimize.3.1.12.zip
--rw-r--r-- 1 root nginx 145K Sep 30 18:28 better-search-replace.1.4.7.zip
--rw-r--r-- 1 root nginx  44K Sep 30 18:29 cache-enabler.1.8.15.zip
--rw-r--r-- 1 root nginx  19K Sep 30 18:29 classic-editor.1.6.5.zip
+-rw-r--r-- 1 root nginx 6.0M Oct  4 03:17 advanced-custom-fields.6.3.6.zip
+-rw-r--r-- 1 root nginx 104K Oct  4 03:17 akismet.5.3.3.zip
+-rw-r--r-- 1 root nginx 9.3K Oct  4 03:18 amr-cron-manager.2.3.zip
+-rw-r--r-- 1 root nginx  20K Oct  4 03:18 assets-manager.1.0.2.zip
+-rw-r--r-- 1 root nginx 259K Oct  4 03:18 autoptimize.3.1.12.zip
+-rw-r--r-- 1 root nginx 155K Oct  4 03:18 better-search-replace.1.4.7.zip
+-rw-r--r-- 1 root nginx  45K Oct  4 03:18 cache-enabler.1.8.15.zip
+-rw-r--r-- 1 root nginx  20K Oct  4 03:18 classic-editor.1.6.5.zip
 ```
 
 Script also saves each WordPress plugin's HTTP response headers for troubleshooting
@@ -562,7 +690,6 @@ Example where source of WordPress plugin is from WordPress download on `https://
 
 ```bash
 cat /home/nginx/domains/plugins.domain.com/plugin-logs/autoptimize.3.1.12.headers
-
 HTTP/2 200 
 date: Mon, 30 Sep 2024 18:28:57 GMT
 content-type: application/zip
@@ -651,6 +778,408 @@ x-source: R2
 x-suggested-filename: autoptimize.3.1.12.zip
 server: cloudflare
 cf-ray: 8cc7ad8048d87e9c-LAX
+```
+
+### Mirrored Plugin Checksums
+
+Mirror system will now also fetch WordPress Plugin checksums and save to Cloudflare R2 S3 object storage and CDN caching.
+
+```
+rm -rf /home/wordpress-svn/last_changed_revisions.txt && rm -rf /home/nginx/domains/plugins.domain.com/public/*
+
+time ./get_plugins_r2.sh -p 1 -d
+
+Processing plugin: autoptimize
+[DEBUG] Checking latest version and download link for autoptimize
+[DEBUG] Latest version for autoptimize: 3.1.12
+[DEBUG] API download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Stored version for autoptimize: 3.1.12
+[DEBUG] API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Constructed download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Using API-provided download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Downloading autoptimize version 3.1.12 through Cloudflare Worker
+[DEBUG] Successfully downloaded autoptimize version 3.1.12 from R2 storage
+Successfully processed autoptimize.
+Time taken for autoptimize: 0.1435 seconds
+[DEBUG] Saving plugin json metadata for autoptimize version 3.1.12
+[DEBUG] json metadata for autoptimize version 3.1.12 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for autoptimize.
+[DEBUG] Fetching and saving checksums for autoptimize version 3.1.12
+[DEBUG] Sending request to Worker for checksums: https://your-worker-url.workers.dev?plugin=autoptimize&version=3.1.12&type=checksums&force_update=true
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for autoptimize version 3.1.12 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for autoptimize.
+Plugin download process completed.
+
+real    0m1.978s
+user    0m0.097s
+sys     0m0.045s
+```
+
+WordPress plugin download
+
+```
+curl -I https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+HTTP/2 200 
+date: Fri, 04 Oct 2024 01:56:31 GMT
+content-type: application/zip
+content-length: 264379
+etag: "49dbcac863d2ec3e3ff4675064a943ec"
+last-modified: Tue, 01 Oct 2024 16:06:26 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 72381
+expires: Mon, 04 Nov 2024 01:56:31 GMT
+cache-control: public, max-age=2678400
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8cd18e4f0f897d58-LAX
+```
+
+WordPress plugin checksums queried from local mirrored and Cloudflare cached R2 S3 object store. Added `zip_mirror` field link to local mirror copy of plugin download link too.
+
+```
+curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json | jq -r '[.zip, .zip_mirror]'
+[
+  "https://downloads.wordpress.org/plugins/autoptimize.3.1.12.zip",
+  "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
+]
+```
+
+Full WordPress plugin checksums output. The `zip_mirror` field is ordered at bottom of output. Could reorder it for visual display but not needed.
+
+```
+curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json | jq -r
+{
+  "plugin": "autoptimize",
+  "version": "3.1.12",
+  "source": "https://plugins.svn.wordpress.org/autoptimize/tags/3.1.12/",
+  "zip": "https://downloads.wordpress.org/plugins/autoptimize.3.1.12.zip",
+  "files": {
+    "LICENSE": {
+      "md5": "8264535c0c4e9c6c335635c4026a8022",
+      "sha256": "a45d0bb572ed792ed34627a72621834b3ba92aab6e2cc4e04301dee7a728d753"
+    },
+    "autoptimize.php": {
+      "md5": "6e2e19ab82b51403c53752dc7644dc72",
+      "sha256": "a08620d3ff01f11e5b487db915a38c9aa09b6d0c2fad9db30893bf62598013bf"
+    },
+    "autoptimize_helper.php_example": {
+      "md5": "205d3afe9b9f8936b390c48dbfb11bab",
+      "sha256": "c74b4a74fd693919e1f3afddcc5d3fa0b1522d5934bffaee2fbf60ccfd39dc8d"
+    },
+    "classes/autoptimizeBase.php": {
+      "md5": "244ccb3b3864a5097974958a7206988a",
+      "sha256": "517c79450d349e69d1e2d0918605855d4ed330b02dfec2eb3dc472e20fa10684"
+    },
+    "classes/autoptimizeCLI.php": {
+      "md5": "b944f23eb3d0505dfc4501eecb430ba8",
+      "sha256": "bfc6752846fadf2b80db3bba6734f2c5f09c6af24fc2660c196ab2ee57330801"
+    },
+    "classes/autoptimizeCSSmin.php": {
+      "md5": "94ecf9cc6b56b0777a9585abb24e4459",
+      "sha256": "158493813a94360b25b0b080815d5fa74974ee79c77ea623128f5b21c6e8e16d"
+    },
+    "classes/autoptimizeCache.php": {
+      "md5": "d27f75afefb66f13913228857c75da1a",
+      "sha256": "666fabdc23a15982d2047d3a1c01a14012905af2839f63ebeca0e06adbaadf25"
+    },
+    "classes/autoptimizeCacheChecker.php": {
+      "md5": "d373eccbc28843d7b584e6939a9851ee",
+      "sha256": "9428a93e65b6b1686c3c9390d4169d0e8d0911e4a89ef299ed86a844722a5b91"
+    },
+    "classes/autoptimizeCompatibility.php": {
+      "md5": "d374d632ab8f31198c2b1dee5eb88c5a",
+      "sha256": "0a1aaaa15324cbd8aa8228b585227099142bed6fb12001a6511292113c1d6938"
+    },
+    "classes/autoptimizeConfig.php": {
+      "md5": "ea64f11180ccdd9c080ee3abca7fc4e6",
+      "sha256": "06f15af7d3044748e21ced12b83278d9f7e12b05b767c9dabf045aaed612ea24"
+    },
+    "classes/autoptimizeCriticalCSSBase.php": {
+      "md5": "bff4d80b271006c32120200c20efda3f",
+      "sha256": "8a667398e8296d890b6a7f55c908349b6b4de0c388c3fdfbdd9cb449f2557b9b"
+    },
+    "classes/autoptimizeCriticalCSSCore.php": {
+      "md5": "56c4ea2d53baaaa04756228fe34baa64",
+      "sha256": "350e5fd3ee001edac63660a915d953b19840f9c11a3ba29b37f2f7a8230c8411"
+    },
+    "classes/autoptimizeCriticalCSSCron.php": {
+      "md5": "43246f6d586b1227cfd89683457b9287",
+      "sha256": "8b7f7ebc5ec894fd878f0c28d61795da85df595653a6015656a44e8e471f977a"
+    },
+    "classes/autoptimizeCriticalCSSEnqueue.php": {
+      "md5": "933e49f5fee25511403f2a000d699160",
+      "sha256": "cc2a9466ab19446e778fc0c26d09ba7cf27b814c70095628f9b50fc9800e866a"
+    },
+    "classes/autoptimizeCriticalCSSSettings.php": {
+      "md5": "8a7c4edd54a4429e464ad4ac443e8854",
+      "sha256": "69b4320a7f2f1b2f037c158da07f1937e6eef066f959d81baddb303a5cc3f3c4"
+    },
+    "classes/autoptimizeCriticalCSSSettingsAjax.php": {
+      "md5": "24fe31304f39dfc39256e567544cd26b",
+      "sha256": "a15640d7713934e0159fc1a2a6ea8dfadff5e856ca3c84450b00c673dda24ba2"
+    },
+    "classes/autoptimizeExitSurvey.php": {
+      "md5": "4ea39d1515cfd872686859d18d41c16d",
+      "sha256": "3374ab856f52454d8321e02ab4b52630579fff4cbf183071d5d86552f3ac54c3"
+    },
+    "classes/autoptimizeExtra.php": {
+      "md5": "41a26b05794390aa329c7de4215a7852",
+      "sha256": "e1a9d6e02545c037f231ea184f0905fa792b60dc1c8ab55fc29821d4a11a26a8"
+    },
+    "classes/autoptimizeHTML.php": {
+      "md5": "5bdf7ff2306d1233bb543f2f1d611979",
+      "sha256": "134406ba8659761c53266724f4ede1f9c3ac9392ece93de740cd52c734d6b0f8"
+    },
+    "classes/autoptimizeImages.php": {
+      "md5": "5cd15041edeeabdf1ff3f798f6203a90",
+      "sha256": "f78351110bfad5694244e5cee2a95b6fcb9c08fee999b8db97db4e9e0cb1f637"
+    },
+    "classes/autoptimizeMain.php": {
+      "md5": "f24831cfba1c706bd360f73d1bf33a70",
+      "sha256": "d91149c20d607c277eaeb157d816b075cc1ead523b46d8db7f09627303c5a713"
+    },
+    "classes/autoptimizeMetabox.php": {
+      "md5": "07cfc8da3c46f19018ff293e5e6d3447",
+      "sha256": "4b9ab76596e47c8cc5685f896ea3f39297b3d345e696b170e12ea535aaf9229f"
+    },
+    "classes/autoptimizeOptionWrapper.php": {
+      "md5": "76c8b1abc9e98dff698ded12f3ad6deb",
+      "sha256": "c682cd04e98b5b51434786b89da5cad30b05250fc6a098c38bc5230fb2ff0878"
+    },
+    "classes/autoptimizePartners.php": {
+      "md5": "73a94c24630e6cbeb9821d3083f57adb",
+      "sha256": "4d03a6a22f4afd8741ab1821154412e6118769307d0b0dd9fbaba83ef1d882bf"
+    },
+    "classes/autoptimizeProTab.php": {
+      "md5": "5ac6c624ed4cf7f924fb00918734184d",
+      "sha256": "5a8fdad738be1b3b0c3d67b0d982c85630f7de69d8436ec73488709322bb49eb"
+    },
+    "classes/autoptimizeScripts.php": {
+      "md5": "963d5c657448274aecdd86d2cb4b42d7",
+      "sha256": "c53d392cf82a25b9e7c082649a91d263bf6d16d88b50c81321714dd273255353"
+    },
+    "classes/autoptimizeSpeedupper.php": {
+      "md5": "63ae28bacd6791c67b7b07dceea41ccd",
+      "sha256": "1b6b8cf39a0769bd75d74904513f02c2ae17393ceff73a7aa1b658f36630c678"
+    },
+    "classes/autoptimizeStyles.php": {
+      "md5": "1f890f572c7a028f877b5c3b08ac921d",
+      "sha256": "19910db7577acd9a0d815e865c847ec8baf383f4db577b6eec6221e849ec71e8"
+    },
+    "classes/autoptimizeToolbar.php": {
+      "md5": "2617929eec3c4fb2552bbba8fe53bde3",
+      "sha256": "7b0738c7c5130a48f294c6d4a3f07b27c0f98dcdee2b2ee0e1d9eaef1245d6dc"
+    },
+    "classes/autoptimizeUtils.php": {
+      "md5": "cc6426ed2fc0cdb0342c1b39f537f2b9",
+      "sha256": "8f3796d9cc141ec24d30afed0504b1d693d7ef500b8a1384bff1901dd7e53fbf"
+    },
+    "classes/autoptimizeVersionUpdatesHandler.php": {
+      "md5": "79ff7f82bd634a6c47e7351a4ed0e2de",
+      "sha256": "6f50b62c8ab80c5b7f334546b56b855b38337f78c0cb60d8e15d022b6bd7a82e"
+    },
+    "classes/critcss-inc/admin_settings_adv.php": {
+      "md5": "623a61484ad66df65240b555fc0e1e2b",
+      "sha256": "842cc36aa8b8291df9d93c32855fbf37e3eebaadf59b442336967bdfa75180bf"
+    },
+    "classes/critcss-inc/admin_settings_debug.php": {
+      "md5": "549a0ed67fa85bad9cdcd93d7824635b",
+      "sha256": "80c2050c00bd092c52eb627b587b12d1028e89a3bc2090976970853951ccc476"
+    },
+    "classes/critcss-inc/admin_settings_explain.php": {
+      "md5": "ecf18d604e3e9208e26c38b2f968ff2e",
+      "sha256": "3168f2d19f60999a7d8a4480c0b0e91b1a24102fec41629737f2fd527fe9e112"
+    },
+    "classes/critcss-inc/admin_settings_impexp.js.php": {
+      "md5": "163ea78cc7b54a24656f5388807c2f26",
+      "sha256": "b4092386ce39987b23bb515bab11d0b803a1a71bb6d57d38934041ad6a290d91"
+    },
+    "classes/critcss-inc/admin_settings_key.php": {
+      "md5": "9f58a54f1c6f44a5c3dc887747308d6a",
+      "sha256": "6f45c21de863b8d247223ea96ae64474d725a20fef4697eb3256cba7700ffbe5"
+    },
+    "classes/critcss-inc/admin_settings_queue.js.php": {
+      "md5": "2bedd84c761996c60f5f7de5c2d3e09e",
+      "sha256": "7dce89bf433c98a5ff1eb2470894559ed74a0c0673d4dc77ee7434c7d09a64a9"
+    },
+    "classes/critcss-inc/admin_settings_queue.php": {
+      "md5": "242c6d576fa055136e30ccbf0cd915aa",
+      "sha256": "6e863c244e456dda7d7eb94f76df1e3138ce7e043de817f6582d8530fb31d0c8"
+    },
+    "classes/critcss-inc/admin_settings_rules.js.php": {
+      "md5": "41bcea7946cd6d02773fb714c6478544",
+      "sha256": "8aa89b1b957fdd10f96a914ed4ba6e574877def154d94069656e3a003146f291"
+    },
+    "classes/critcss-inc/admin_settings_rules.php": {
+      "md5": "9bfdc55c7620611fe667b0ed5454604f",
+      "sha256": "937339a6e65433353c21b7343847ce5fd2e5f9470c10f199ecafd9889c637a3d"
+    },
+    "classes/critcss-inc/css/admin_styles.css": {
+      "md5": "8baa259e42a4e1d2513a2ff99ad1cf74",
+      "sha256": "9555bdfdd6571689c7256cadf8308c759f10e996380ccb35321251793a5b50a6"
+    },
+    "classes/critcss-inc/css/ao-tablesorter/asc.gif": {
+      "md5": "05d3db0081998106ce3c56735da19c53",
+      "sha256": "2986d63c92fe0530ed38c9a575b8a57f30f6e644d133d63a3f7910e7399f9cfd"
+    },
+    "classes/critcss-inc/css/ao-tablesorter/bg.gif": {
+      "md5": "2ee8a6953adc895fbab33a66fa77a0bd",
+      "sha256": "13b831eab467260b766212f1d71fb31bef4d67df23aca2c444f24788150675bf"
+    },
+    "classes/critcss-inc/css/ao-tablesorter/desc.gif": {
+      "md5": "b0c55062a15066f60d615abf6ec98746",
+      "sha256": "79ce004c07caa11bd126340afd57ad2104e774a1dbfe9763c0dce67592c2ffeb"
+    },
+    "classes/critcss-inc/css/ao-tablesorter/style.css": {
+      "md5": "669034b0d2dcf76e9d5ac66146a7c925",
+      "sha256": "7adf54de7dc630ec661e3530bc3541ff46e7a6b9ddd0c3d8aa108fcff96259df"
+    },
+    "classes/critcss-inc/js/admin_settings.js": {
+      "md5": "a5179c478cef924f134f11abb19c282c",
+      "sha256": "ca58cc54be7d607b4c3fa117589cdda5e3171bb79452dbb5a19f91371bed1071"
+    },
+    "classes/critcss-inc/js/jquery.tablesorter.min.js": {
+      "md5": "f1cc6ebdef9231e4747473f82d7f2c7c",
+      "sha256": "54bb04a582b2bc4f49575ea153acd8c473509a93fd7bc6ef33a019b15fdf4dad"
+    },
+    "classes/critcss-inc/js/md5.min.js": {
+      "md5": "b24893215933dafef9a250b4a46a602d",
+      "sha256": "27d221be42096f476245524ecaef8d76d838d5189b16417c79a03ad23763b41f"
+    },
+    "classes/external/do_not_donate_smallest.png": {
+      "md5": "586ba18f1e8e08f25b8117f4db4a0899",
+      "sha256": "31317f4ab51b098a726d7c37fe4135d4f9380ea343547bfcb8a30e6022ed031f"
+    },
+    "classes/external/index.html": {
+      "md5": "0ec66da07221a6c5f68fc62571a1b7f7",
+      "sha256": "c9a69e377eea7262984d88d3294f64266a2444726aaa87284f5c13c4613a8f2e"
+    },
+    "classes/external/js/index.html": {
+      "md5": "0ec66da07221a6c5f68fc62571a1b7f7",
+      "sha256": "c9a69e377eea7262984d88d3294f64266a2444726aaa87284f5c13c4613a8f2e"
+    },
+    "classes/external/js/jquery.cookie.js": {
+      "md5": "f371d4e8cbe6fe960f9e88e755d75ebb",
+      "sha256": "b16b491962294905e3cff4ac14f45c7da629b5918d5cd77f54d4b97e93316c8f"
+    },
+    "classes/external/js/jquery.cookie.min.js": {
+      "md5": "c0d03ada6aec64f3c178da25331f0a8f",
+      "sha256": "1cc91511f853cb46fbbfaf1bd9c3c55944fbce7f5b0e02e82906502736c30671"
+    },
+    "classes/external/js/lazysizes.min.js": {
+      "md5": "d1edbffbde50cd32ab770746b4140906",
+      "sha256": "c4fada4accfa24704b54248bc5ce84acac50b6a059828b7714fe3006786c80c1"
+    },
+    "classes/external/js/unslider-dots.css": {
+      "md5": "3fc3024b132f6a7b81fe535ffffdc5a6",
+      "sha256": "92b758fa6195848b306a834a4654683aff3f7b747cf5a65c824677e481cd137d"
+    },
+    "classes/external/js/unslider.css": {
+      "md5": "f5c7a42a618f4f6f7e6ea0677b781e46",
+      "sha256": "e8b6bf8321af1ccd3253e3d6d5d0b65288a9b42ab64fd4ba1bad618eafe96bb3"
+    },
+    "classes/external/js/unslider.min.js": {
+      "md5": "41d6943422aa5dcecad652df78f260a7",
+      "sha256": "dfe3b7611edf3fbcb1fc8feea9479b017d2c3645596e9e299f6e987beb7c4a18"
+    },
+    "classes/external/php/ao-minify-html.php": {
+      "md5": "a323680c39d2acd5448d8b03fe282226",
+      "sha256": "d368f65ff455d07f1a0a283bd0ef8deac31602971305ecd2e1f39aa62a2a4a9e"
+    },
+    "classes/external/php/index.html": {
+      "md5": "0ec66da07221a6c5f68fc62571a1b7f7",
+      "sha256": "c9a69e377eea7262984d88d3294f64266a2444726aaa87284f5c13c4613a8f2e"
+    },
+    "classes/external/php/jsmin.php": {
+      "md5": "5a15a0d9e574ec8c816c4ffc2cc8ad87",
+      "sha256": "b5ecade31f92cd19f40e535cd173152910e92a2c5575aedb0904e59f366873c1"
+    },
+    "classes/external/php/persist-admin-notices-dismissal/README.md": {
+      "md5": "3a8d0d06b4b8861d3a73a3bac5fe0402",
+      "sha256": "6a84c07b52cfcb5ac646828f66c67dd062b4100308465437f10ced85b5c388c3"
+    },
+    "classes/external/php/persist-admin-notices-dismissal/dismiss-notice.js": {
+      "md5": "64012407f5f93d41a8d2b5d44783e78e",
+      "sha256": "e7d8333730ec157d11313255f3f86e2cd0f13906a857e32eee81866b2edbf563"
+    },
+    "classes/external/php/persist-admin-notices-dismissal/persist-admin-notices-dismissal.php": {
+      "md5": "f96be65837b77495538fd0f7d8e506cf",
+      "sha256": "3d651fff90eba15f5a0ecec752b31307a3cf45d1e8c995572b75fb4f312e3e97"
+    },
+    "classes/external/php/yui-php-cssmin-bundled/Colors.php": {
+      "md5": "96f5364446d60a49a07578c6007212f8",
+      "sha256": "8241f3aa9fbff6f93a3965cdc57ad234c6eabc4b8ade1cc4ee07b5a4f12121c4"
+    },
+    "classes/external/php/yui-php-cssmin-bundled/Minifier.php": {
+      "md5": "e36c75393edd3c13ea0e6c2a8f735a3f",
+      "sha256": "99f7cca9ba9a7c8b9d188bc35d989d373df7b1a37533d1dacdee860f5f1d4bda"
+    },
+    "classes/external/php/yui-php-cssmin-bundled/Utils.php": {
+      "md5": "a1991bbd4a186ac386c17b2c8d773eff",
+      "sha256": "80aca0be7aff734bc0a084da7b3d4c16d1ecd4f8fcfa24d0cb9e0f26b5a16016"
+    },
+    "classes/external/php/yui-php-cssmin-bundled/index.html": {
+      "md5": "0ec66da07221a6c5f68fc62571a1b7f7",
+      "sha256": "c9a69e377eea7262984d88d3294f64266a2444726aaa87284f5c13c4613a8f2e"
+    },
+    "classes/index.html": {
+      "md5": "114b8f8a1ef61b647770e5157ed8ce16",
+      "sha256": "cebf5190fbd16eb950d39686d4d91adfbe013af57ed359e59d971b875594d999"
+    },
+    "classes/static/exit-survey/exit-survey.css": {
+      "md5": "142e9ea50bbb5355f333d6bf6b6430e8",
+      "sha256": "8fab6a78c55fafa7bc01125facad56a2c110f626e6c2ae1cfcb8f0549a02dbea"
+    },
+    "classes/static/exit-survey/exit-survey.js": {
+      "md5": "af4d56930f6d00aeaa5f0d47db6a4c47",
+      "sha256": "59da3221da1aed73a8fde62914e3646a04d0f1195920467e97873d760ae602dc"
+    },
+    "classes/static/loading.gif": {
+      "md5": "3fe525943d7c65e42cf4eb3b4b8faadc",
+      "sha256": "a32e6e0f11c0e330c93528577ec3fb05a2b0295555bbdb301a1161e1e5ce0194"
+    },
+    "classes/static/toolbar.css": {
+      "md5": "46026fe300d8b28370edbaee60d6f3ef",
+      "sha256": "83ccb86844b037ab212b780aec3cfd5b99c8e891684ec26ff33608667fd13e5f"
+    },
+    "classes/static/toolbar.js": {
+      "md5": "75853c230a5698015327421bc68e854c",
+      "sha256": "5b914081fa55efa384fdbd44cd5b30ab9af9b3f7c84c323e07526ce1d4199ff8"
+    },
+    "classes/static/toolbar.min.css": {
+      "md5": "f0c26e43e07537fe7aeec160c03fdf55",
+      "sha256": "52f87d70523ad1b71837e4f90cf80ee72b3c4abc43ebc7b3005176248f349ed4"
+    },
+    "classes/static/toolbar.min.js": {
+      "md5": "3487659efc81b19d3d385eeb222cf41d",
+      "sha256": "8e82bfa65188ed2aaa4971e036b13aa1167f760695971389346037a587ae6a19"
+    },
+    "config/autoptimize_404_handler.php": {
+      "md5": "36c7e6bcf213a60c907be1192ca8363d",
+      "sha256": "088676e4bf93e3a4b56b1c0d2e40b4606a81d5d9ff8e78c1e01a0c42e509b09f"
+    },
+    "config/default.php": {
+      "md5": "a7bf33b0b73347530d0ef0320e7fdad8",
+      "sha256": "4c228dc78903b21b4497d88d8fe9639b7fd5127716285a84d0c15b456d4d7cf2"
+    },
+    "config/index.html": {
+      "md5": "114b8f8a1ef61b647770e5157ed8ce16",
+      "sha256": "cebf5190fbd16eb950d39686d4d91adfbe013af57ed359e59d971b875594d999"
+    },
+    "index.html": {
+      "md5": "114b8f8a1ef61b647770e5157ed8ce16",
+      "sha256": "cebf5190fbd16eb950d39686d4d91adfbe013af57ed359e59d971b875594d999"
+    },
+    "readme.txt": {
+      "md5": "f3e1ee970629b4930c97cb78846e49a4",
+      "sha256": "36470540e90472dd37b0bfab07012899493863fa6402a7922ae1a42ef2158f1e"
+    }
+  },
+  "zip_mirror": "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
+}
 ```
 
 ### Cached Plugin
