@@ -280,10 +280,10 @@ export BUCKET_NAME='YOUR_R2_BUCKET_NAME'
 ./query_r2_graphql.sh
 GraphQL query saved to r2_graphql_query.graphql
 Checking last 30 minutes...
-No metrics found.
+Metrics found!
 
 Checking last 60 minutes...
-No metrics found.
+Metrics found!
 
 Checking last 120 minutes...
 Metrics found!
@@ -306,75 +306,93 @@ Metrics found!
 Comprehensive Summary:
 
 Last 30 minutes:
-No metrics found
+Querying data from 2024-10-04T05:41:23Z to 2024-10-04T06:11:23Z
+GetObject: 4
 
 Last 60 minutes:
-No metrics found
+Querying data from 2024-10-04T05:11:23Z to 2024-10-04T06:11:23Z
+GetObject: 475
+PutObject: 240
 
 Last 120 minutes:
-Querying data from 2024-10-03T07:52:46Z to 2024-10-03T09:52:46Z
-GetObject: 1
-PutObject: 1
-
-Last 360 minutes:
-Querying data from 2024-10-03T03:52:46Z to 2024-10-03T09:52:46Z
-GetObject: 3
-PutObject: 1
-
-Last 720 minutes:
-Querying data from 2024-10-02T21:52:47Z to 2024-10-03T09:52:47Z
-GetObject: 3
-PutObject: 1
-
-Last 1440 minutes:
-Querying data from 2024-10-02T09:52:47Z to 2024-10-03T09:52:47Z
-GetObject: 1174
-PutObject: 312
-
-Last 2880 minutes:
-Querying data from 2024-10-01T09:52:47Z to 2024-10-03T09:52:47Z
-GetObject: 2245
+Querying data from 2024-10-04T04:11:24Z to 2024-10-04T06:11:24Z
+GetObject: 1121
 PutObject: 570
 
+Last 360 minutes:
+Querying data from 2024-10-04T00:11:24Z to 2024-10-04T06:11:24Z
+GetObject: 1149
+PutObject: 579
+
+Last 720 minutes:
+Querying data from 2024-10-03T18:11:25Z to 2024-10-04T06:11:25Z
+GetObject: 1149
+PutObject: 579
+
+Last 1440 minutes:
+Querying data from 2024-10-03T06:11:25Z to 2024-10-04T06:11:25Z
+GetObject: 1152
+PutObject: 580
+
+Last 2880 minutes:
+Querying data from 2024-10-02T06:11:25Z to 2024-10-04T06:11:25Z
+GetObject: 2596
+PutObject: 891
+
 Last 4320 minutes:
-Querying data from 2024-09-30T09:52:48Z to 2024-10-03T09:52:48Z
-GetObject: 2263
-PutObject: 600
+Querying data from 2024-10-01T06:11:26Z to 2024-10-04T06:11:26Z
+GetObject: 3396
+PutObject: 1149
 
 Conclusion:
 Metrics were found in at least one time range.
-Most recent activity: Last 120 minutes
+Most recent activity: Last 30 minutes
 
 Activity summary:
-  PutObject: 600
-  GetObject: 2263
-  Querying data from 2024-09-30T09:52:48Z to 2024-10-03T09:52:48Z
+  PutObject: 1149
+  GetObject: 3396
+  Querying data from 2024-10-01T06:11:26Z to 2024-10-04T06:11:26Z
 - Last 4320 minutes:
-  PutObject: 570
-  GetObject: 2245
-  Querying data from 2024-10-01T09:52:47Z to 2024-10-03T09:52:47Z
+  PutObject: 891
+  GetObject: 2596
+  Querying data from 2024-10-02T06:11:25Z to 2024-10-04T06:11:25Z
 - Last 2880 minutes:
-  PutObject: 312
-  GetObject: 1174
-  Querying data from 2024-10-02T09:52:47Z to 2024-10-03T09:52:47Z
+  PutObject: 580
+  GetObject: 1152
+  Querying data from 2024-10-03T06:11:25Z to 2024-10-04T06:11:25Z
 - Last 1440 minutes:
-  PutObject: 1
-  GetObject: 3
-  Querying data from 2024-10-02T21:52:47Z to 2024-10-03T09:52:47Z
+  PutObject: 579
+  GetObject: 1149
+  Querying data from 2024-10-03T18:11:25Z to 2024-10-04T06:11:25Z
 - Last 720 minutes:
-  PutObject: 1
-  GetObject: 3
-  Querying data from 2024-10-03T03:52:46Z to 2024-10-03T09:52:46Z
+  PutObject: 579
+  GetObject: 1149
+  Querying data from 2024-10-04T00:11:24Z to 2024-10-04T06:11:24Z
 - Last 360 minutes:
-  PutObject: 1
-  GetObject: 1
-  Querying data from 2024-10-03T07:52:46Z to 2024-10-03T09:52:46Z
+  PutObject: 570
+  GetObject: 1121
+  Querying data from 2024-10-04T04:11:24Z to 2024-10-04T06:11:24Z
 - Last 120 minutes:
+  PutObject: 240
+  GetObject: 475
+  Querying data from 2024-10-04T05:11:23Z to 2024-10-04T06:11:23Z
+- Last 60 minutes:
+  GetObject: 4
+  Querying data from 2024-10-04T05:41:23Z to 2024-10-04T06:11:23Z
+- Last 30 minutes:
 
 Trend analysis:
-No activity in the last hour. Consider investigating if this is unexpected.
 Significant activity in the last 24 hours. Review the 24-hour metrics for a comprehensive overview.
 Activity detected in the last 72 hours. Compare with 24-hour and 48-hour metrics to identify trends.
+```
+
+The above results are just after a Github Workflow automated run downloading and caching locally 563 WordPress plugins. Server uses UTC timezone. But last 360 minutes seems to be close to the Cloudflare R2 read/write usage for the run:
+
+```bash
+- Last 360 minutes:
+  PutObject: 570
+  GetObject: 1121
+  Querying data from 2024-10-04T04:11:24Z to 2024-10-04T06:11:24Z
 ```
 
 The `r2_graphql_query.graphql` query used - adjusting the `START_DATE` and `END_DATE` for 30, 60, 120, 360, 720, 1440, 2880, 4320 durations in minutes.
