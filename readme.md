@@ -1723,8 +1723,14 @@ Using Github Workflow to automate the script.
 
 ![Github Workflow](/screenshots/get_plugins_r2_workflow-02.png)
 
-Example of Cloudflare R2 S3 buckets populated with WordPress plugin zip files and JSON metadata files using S3Browser to view the listings. The example is only using a selection of WordPress plugins I want to mirror for this POC. Script supports full mirror and cache of all >100K plugins.
+Example of Cloudflare R2 S3 buckets populated with [WordPress plugin zip files](#cached-plugin) and [JSON metadata files](#mirrored-wordpress-plugin-api-end-point) using S3Browser to view the listings. The example is only using a selection of WordPress plugins I want to mirror for this POC. Script supports full mirror and cache of all >100K plugins.
 
 ![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-01.png)
 
 ![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-json-metadata-01.png)
+
+[Plugin checksum API](#mirrored-plugin-checksums) mirrored data i.e. at `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/autoptimize/3.1.2.json`.
+
+![Plugin Checksums in Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-checksums-01.png)
+
+![Plugin Checksums in Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-checksums-02.png)
