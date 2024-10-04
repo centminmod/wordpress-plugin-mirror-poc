@@ -845,7 +845,7 @@ server: cloudflare
 cf-ray: 8cd18e4f0f897d58-LAX
 ```
 
-WordPress plugin checksums queried from local mirrored and Cloudflare cached R2 S3 object store. Added `zip_mirror` field link to local mirror copy of plugin download link too.
+WordPress plugin checksums queried from local mirrored and Cloudflare cached R2 S3 object store version at `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/autoptimize/3.1.2.json`. Added `zip_mirror` field link to local mirror copy of plugin download link too.
 
 ```
 curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json | jq -r '[.zip, .zip_mirror]'
