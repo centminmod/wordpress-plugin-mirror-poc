@@ -782,7 +782,15 @@ cf-ray: 8cc7ad8048d87e9c-LAX
 
 ### Mirrored Plugin Checksums
 
-Mirror system will now also fetch WordPress Plugin checksums and save to Cloudflare R2 S3 object storage and CDN caching.
+The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
+
+#### How it works:
+
+1. The system fetches official checksums from WordPress.org for each plugin.
+2. Checksums are stored in the R2 bucket alongside plugin files and metadata.
+3. Users can verify downloaded plugins against these checksums to ensure file integrity.
+
+Example run for just `autoptimize` plugin:
 
 ```
 rm -rf /home/wordpress-svn/last_changed_revisions.txt && rm -rf /home/nginx/domains/plugins.domain.com/public/*
