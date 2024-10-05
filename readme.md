@@ -2124,6 +2124,8 @@ wp plugin list
 +-------------------------------+----------+--------+---------+----------------+-------------+
 ```
 
+For update notications, you could possible write a script that reads your WordPress installations plugin list using WP CLI tool and use WP CLI plugin status https://developer.wordpress.org/cli/commands/plugin/status/ to check for updates or script to check via mirrored JSON metadata query and have it trigger a WP CLI plugin update command https://developer.wordpress.org/cli/commands/plugin/update/. For added notifications, the script could setup mobile/tablet push notifications via servcies like pushover.net to alert you of new updates, sucessfull/failed updates etc.
+
 ## Screenshots
 
 Using Github Workflow to automate the script.
