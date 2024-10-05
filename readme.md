@@ -19,7 +19,7 @@
 
 ## Introduction
 
-On October 2, 2024, I began this proof of concept (POC) to develop a solution tailored to my specific needs.
+On October 2, 2024, I began this proof of concept (POC) to develop a solution tailored to my specific needs. I will continually update this POC as I develop it further. So watch this space.
 
 The WordPress Plugin Mirror Downloader is a robust system designed to efficiently download, cache, and manage WordPress plugins. This project serves as my proof of concept, with the hope that it might inspire others to create their own fallback solutions for WordPress.org, particularly during periods of downtime. It leverages Cloudflare's edge computing capabilities (including CDN, Workers, etc.) and R2 S3 object storage to provide a high-performance, scalable solution for plugin management.
 
