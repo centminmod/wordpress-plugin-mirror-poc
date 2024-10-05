@@ -2090,7 +2090,7 @@ Success: Activated 1 of 1 plugins.
 Notice installing plugin zip from local mirrored copy at `https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip`.
 
 ```
-wp plugin install ./classic-editor.1.6.5.zip
+wp plugin install https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip
 ```
 ```
 wp plugin install https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip
