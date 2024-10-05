@@ -19,17 +19,23 @@
 
 ## Introduction
 
-The WordPress Plugin Mirror Downloader is a sophisticated system designed to efficiently download, cache, and manage WordPress plugins. It's my proof of concept attempt and hope it inspires others to find their own solutions for a fallback backup alternative to wordpress.org in case of downtime. It leverages Cloudflare's edge computing capabilities and object storage to create a high-performance, scalable solution for plugin management. If you are a open source project, Cloudflare has expanded it's free support offerings via Cloudflare Project Alexandria https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/. 
+On October 2, 2024, I began this proof of concept (POC) to develop a solution tailored to my specific needs.
 
-Given [Cloudflare CDN cached WordPress plugin download benchmarks speeds](#cached-plugin) with 43x times faster download speed and 82% faster latency than plugin served from Wordpress.org, Matt Mullenweg should take up Cloudflare CEO, Matthew Prince's [offer of donating capacity to Wordpress.org](https://x.com/eastdakota/status/1841154152006627663?t=L0e-TL1cPhkgckxPDG6nvg&s=19). Would dramatically cut Wordpres.org's infrastructure running costs and speed up file downloads. :sunglasses:
+The WordPress Plugin Mirror Downloader is a robust system designed to efficiently download, cache, and manage WordPress plugins. This project serves as my proof of concept, with the hope that it might inspire others to create their own fallback solutions for WordPress.org, particularly during periods of downtime. It leverages Cloudflare's edge computing capabilities (including CDN, Workers, etc.) and R2 S3 object storage to provide a high-performance, scalable solution for plugin management.
 
-The below POC method only focuses on mirroring and downloading WordPress Plugin zip files itself instead of mirroring the entire WordPress plugin SVN repository. The reason is SVN repositories contain the history of all commits and versions for a WordPress plugin so involve alot more files and data size/transfer is larger. 
+The method presented below focuses solely on mirroring and downloading WordPress plugin zip files, rather than mirroring the entire WordPress plugin SVN repository. This is because SVN repositories contain a complete history of all commits and versions for each WordPress plugin, which significantly increases the number of files and the amount of data that needs to be transferred. The way this script works means that you don't need a large amount of local disk storage, as its [cache-only mode](#examples) allows you to directly populate the [Cloudflare R2 S3 object storage bucket](#screenshots), bypassing the need for local downloads if desired. By default, however, local downloads are performed.
 
-Disclaimer, I am a Cloudflare customer since 2011 and official Cloudflare community MVP since 2018 (non-paid similar to how Microsoft MVP program operates) using Cloudflare Free, Pro, Business and Enterprise plans.
+To initially populate all 59,979 WordPress plugins into Cloudflare R2 S3 object storage, the process took approximately 25-30 minutes using [automated GitHub Workflow actions](#screenshots). I divided the list of plugins into 29 segments, each handled by a separate GitHub Workflow action that triggered the script in [cache-only mode](#examples), running across 29 Azure compute-based GitHub runner VPS servers with 4 CPU cores each. The cache-only mode was required due to the limited free disk space on GitHub Workflow's Azure-based VPS runners, as the 59,979 plugins occupied 32GB of space and their JSON metadata files used an additional 420MB. The plugins were ordered from most popular to least popular, allowing automated runs to prioritize updates for the most frequently used plugins.
+
+If you're an open source project, consider checking out Cloudflare for assistance. Cloudflare has expanded its free support offerings for open source projects through [Cloudflare Project Alexandria](https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/).
+
+Given [Cloudflare CDN cached WordPress plugin download benchmark speeds](#cached-plugin), which showed 43 times faster download speeds and 82% lower latency compared to those served from WordPress.org, it's worth considering that Matt Mullenweg should take up Cloudflare CEO Matthew Prince's [offer of donating capacity to WordPress.org](https://x.com/eastdakota/status/1841154152006627663?t=L0e-TL1cPhkgckxPDG6nvg&s=19). This would dramatically reduce WordPress.org's infrastructure costs and enhance file download speeds. :sunglasses:
+
+Disclaimer: I have been a Cloudflare customer since 2011 and an official Cloudflare community MVP since 2018 (unpaid, similar to the Microsoft MVP program), using Cloudflare's Free, Pro, Business, and Enterprise plans.
 
 ### SVN Mirroring
 
-Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which will be beyond Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage. So there would be additional storage costs - unless you are an open source project under Cloudflare Project Alexandria.
+Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which will be beyond Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage. So there would be additional storage costs - unless you are an open source project under [Cloudflare Project Alexandria](https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/).
 
 You can also leverage Cloudflare R2 as mounted Linux FUSE mount via JuiceFS which caches file metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up and benchmarks for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
 
@@ -229,7 +235,7 @@ Total Monthly Cost: $3,586.40 per month
 
 #### Example 4 - more realistic R2 Writes:
 
-There are ~103K Wordpress plugins as of writing. If each plugin would consistently release a new version per day for 30 days, there would be 2x 103,000 R2 writes/day - one for R2 write for zip file and one for R2 write for JSON metadata file = 206,000/day = 6.18 million R2 writes per month. Obviously, not every plugin would be releasing a new version every day for an entire month.
+There are ~103K Wordpress plugins as of writing in SVN plugin repository. Though only 59,979 of these plugins are opened and published and not in `closed` state. The 59,979 plugins take up 32GB of space and their JSON metadata files takes up 420MB of space. If calculate it on higher of the two counts and each plugin would consistently release a new version per day for 30 days, there would be 2x 103,000 R2 writes/day - one for R2 write for zip file and one for R2 write for JSON metadata file = 206,000/day = 6.18 million R2 writes per month. Obviously, not every plugin would be releasing a new version every day for an entire month.
 
 - 250GB of R2 storage with 6.18 million write and 10 billion read operations. Note, if you implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files, you won't get anywhere near 10 bliion read operations in reality. Example of Cloudflare CDN cached mirrored WordPress plugin [here](#cached-plugin).
 - Cloudflare Worker handling 10 billion requests, averaging 3ms CPU time per request
@@ -437,8 +443,8 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
    - This step ensures that the system always works with the most up-to-date plugin data.
 
 3. **Worker Request Generation**:
-   - The script constructs HTTP requests to the Cloudflare Worker for both the plugin ZIP file and its JSON metadata.
-   - These requests include query parameters specifying the plugin name, version, and desired content type (ZIP or JSON).
+   - The script constructs HTTP requests to the Cloudflare Worker for both the plugin ZIP file, the respective checksum file and its JSON metadata.
+   - These requests include query parameters specifying the plugin name, version, and desired content type (ZIP, checksum file or JSON).
 
 4. **Worker Processing**:
    - Upon receiving a request, the Worker first checks if the requested data exists in the appropriate R2 bucket (WP_PLUGIN_STORE for ZIPs, WP_PLUGIN_INFO for JSONs).
@@ -455,7 +461,7 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
    - This compression is performed using the `CompressionStream` API.
 
 7. **Response Handling**:
-   - The bash script receives the Worker's response, which includes the requested data (ZIP or JSON) and relevant headers.
+   - The bash script receives the Worker's response, which includes the requested data (ZIP , checksum file or JSON) and relevant headers.
    - It processes this response, saving the data to the local filesystem and updating its version tracking information.
 
 8. **Parallel Execution**:
@@ -509,7 +515,60 @@ This architecture allows for efficient, scalable, and resilient WordPress plugin
 
 ## Examples
 
-This example shows the WordPress plugins chosen to be downloaded were retrieved from existing Cloudflare R2 S3 object storage bucket instead of from WordPress.org as they were previously downloaded and cached.
+This example shows the WordPress plugins chosen to be downloaded were retrieved from existing Cloudflare R2 S3 object storage bucket instead of from WordPress.org as they were previously downloaded and cached. If you run script with `-c` cache only mode, it allows checking and updating the cache and R2 bucket without downloading files, useful for preemptive caching and system checks where you do not require actual downloading of plugin zip files to the server you ran the script from.
+
+### Basic Usage
+
+```bash
+time ./get_plugins_r2.sh -p 1 -d
+```
+
+### Options
+
+- `-d`: Enable debug mode for more detailed logging
+- `-p N`: Set the number of parallel download jobs (e.g., `-p 4` for 4 parallel jobs)
+- `-a`: Download all available WordPress plugins
+- `-l`: Create a list of all plugins without downloading. Saved to file `${WORDPRESS_WORKDIR}/wp-plugin-svn-list.txt`
+- `-D y`: Enable download delays
+- `-t N`: Set the delay duration in seconds (e.g., `-t 5` for a 5-second delay)
+- `-f`: Force update of JSON metadata for all processed plugins
+- `-c`: Run in cache-only mode (check and update cache without downloading files)
+
+Examples:
+
+```bash
+# Run with debug mode
+./get_plugins_r2.sh -d
+
+# Run with 4 parallel jobs
+./get_plugins_r2.sh -p 4
+
+# Download all plugins instead of selectively predefined plugins
+./get_plugins_r2.sh -a
+
+# List all plugins without downloading
+./get_plugins_r2.sh -l
+
+# Run with a 5-second delay between downloads
+./get_plugins_r2.sh -D y -t 5
+
+# Run with debug mode, 4 parallel jobs, and a 3-second delay
+./get_plugins_r2.sh -d -p 4 -D y -t 3
+
+# Force update JSON metadata for all processed plugins
+./get_plugins_r2.sh -f
+
+# Run with debug mode, 4 parallel jobs, a 3-second delay, and force update
+./get_plugins_r2.sh -d -p 4 -D y -t 3 -f
+
+# Run in cache-only mode
+./get_plugins_r2.sh -c
+
+# Run in cache-only mode with debug and force update
+./get_plugins_r2.sh -c -d -f
+```
+
+Full `get_plugins_r2.sh` run.
 
 ```bash
 time ./get_plugins_r2.sh -p 1 -d
@@ -1211,7 +1270,7 @@ curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptim
 
 ### Cached Plugin
 
-Example of Cloudflare CDN cached plugin compared to Wordpress plugin download.
+Example of Cloudflare CDN cached plugin compared to Wordpress plugin download. Using Cloudflare CDN caching will improve download speed and improve latency for Wordpress plugin downloads and for your web site in general. See my tutorial write up on Cloudflare community forum - [Improving Time To First Byte (TTFB) With Cloudflare](https://community.cloudflare.com/t/improving-time-to-first-byte-ttfb-with-cloudflare/390367/).
 
 Cloudflare CDN cached
 
@@ -1254,28 +1313,28 @@ X-nc: MISS ord 7
 
 Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
 
-| Metric | Run | Cloudflare CDN (s) | Original WordPress (s) | Difference (s) |
-|--------|-----|---------------------|------------------------|----------------|
-| DNS Lookup | 1 | 0.017216 | 0.012032 | -0.005184 |
-|            | 2 | 0.017077 | 0.012507 | -0.004570 |
-|            | 3 | 0.017610 | 0.012564 | -0.005046 |
-| **DNS Avg** |  | **0.017301** | **0.012368** | **-0.004933** |
-| Connect | 1 | 0.018738 | 0.065434 | 0.046696 |
-|         | 2 | 0.019041 | 0.066386 | 0.047345 |
-|         | 3 | 0.019858 | 0.066524 | 0.046666 |
-| **Connect Avg** |  | **0.019212** | **0.066115** | **0.046903** |
-| SSL | 1 | 0.043311 | 0.187870 | 0.144559 |
-|     | 2 | 0.042507 | 0.189180 | 0.146673 |
-|     | 3 | 0.042925 | 0.189554 | 0.146629 |
-| **SSL Avg** |  | **0.042914** | **0.188868** | **0.145954** |
-| TTFB | 1 | 0.100405 | 0.416238 | 0.315833 |
-|      | 2 | 0.096419 | 0.248653 | 0.152234 |
-|      | 3 | 0.099871 | 0.364501 | 0.264630 |
-| **TTFB Avg** |  | **0.098898** | **0.343131** | **0.244233** |
-| Total Time | 1 | 0.107244 | 0.665148 | 0.557904 |
-|            | 2 | 0.103766 | 0.528787 | 0.425021 |
-|            | 3 | 0.108014 | 0.630060 | 0.522046 |
-| **Total Avg** |  | **0.106341** | **0.607998** | **0.501657** |
+| Metric | Run | Cloudflare CDN (s) | Original WordPress (s) | Difference (s) | Percentage Difference (%) |
+|--------|-----|---------------------|------------------------|----------------|---------------------------|
+| DNS Lookup | 1 | 0.017216 | 0.012032 | -0.005184 | -43.09% |
+|            | 2 | 0.017077 | 0.012507 | -0.004570 | -36.55% |
+|            | 3 | 0.017610 | 0.012564 | -0.005046 | -40.17% |
+| **DNS Avg** |  | **0.017301** | **0.012368** | **-0.004933** | **-39.89%** |
+| Connect | 1 | 0.018738 | 0.065434 | 0.046696 | 71.39% |
+|         | 2 | 0.019041 | 0.066386 | 0.047345 | 71.31% |
+|         | 3 | 0.019858 | 0.066524 | 0.046666 | 70.16% |
+| **Connect Avg** |  | **0.019212** | **0.066115** | **0.046903** | **71.00%** |
+| SSL | 1 | 0.043311 | 0.187870 | 0.144559 | 76.92% |
+|     | 2 | 0.042507 | 0.189180 | 0.146673 | 77.53% |
+|     | 3 | 0.042925 | 0.189554 | 0.146629 | 77.34% |
+| **SSL Avg** |  | **0.042914** | **0.188868** | **0.145954** | **77.27%** |
+| TTFB | 1 | 0.100405 | 0.416238 | 0.315833 | 75.86% |
+|      | 2 | 0.096419 | 0.248653 | 0.152234 | 61.21% |
+|      | 3 | 0.099871 | 0.364501 | 0.264630 | 72.60% |
+| **TTFB Avg** |  | **0.098898** | **0.343131** | **0.244233** | **71.18%** |
+| Total Time | 1 | 0.107244 | 0.665148 | 0.557904 | 83.88% |
+|            | 2 | 0.103766 | 0.528787 | 0.425021 | 80.38% |
+|            | 3 | 0.108014 | 0.630060 | 0.522046 | 82.86% |
+| **Total Avg** |  | **0.106341** | **0.607998** | **0.501657** | **82.50%** |
 
 #### Notes:
 - Times are in seconds (s)
@@ -1284,11 +1343,11 @@ Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
 - Average total time improvement: 0.501657 seconds (approximately 82.5% faster)
 
 #### Interpretation:
-1. **DNS Lookup**: Cloudflare is slightly slower (by ~0.005s), likely due to the additional Cloudflare DNS resolution.
-2. **Connect**: Cloudflare is significantly faster (by ~0.047s), possibly due to closer server proximity.
-3. **SSL**: Cloudflare performs much better (by ~0.146s), likely due to optimized SSL handshake.
-4. **Time to First Byte (TTFB)**: Cloudflare is substantially faster (by ~0.244s), indicating quicker server response.
-5. **Total Time**: Cloudflare CDN delivers the file much faster (by ~0.502s), which is a significant improvement.
+1. **DNS Lookup**: Cloudflare is slightly slower (by ~0.005s or -39.89%), likely due to the additional Cloudflare DNS resolution.
+2. **Connect**: Cloudflare is significantly faster (by ~0.047s or 71.00%), possibly due to closer server proximity.
+3. **SSL**: Cloudflare performs much better (by ~0.146s or 77.27%), likely due to optimized SSL handshake.
+4. **Time to First Byte (TTFB)**: Cloudflare is substantially faster (by ~0.244s or 71.18%), indicating quicker server response.
+5. **Total Time**: Cloudflare CDN delivers the file much faster (by ~0.502s or 82.50%), which is a significant improvement.
 
 Cloudflare CDN cached
 
@@ -1547,6 +1606,9 @@ Saving to: ‘/dev/null’
 
 Mirrored and locally cached in Cloudflare R2 bucket plugin JSON metadata where `api.mycloudflareproxy_domain.com` is Cloudflare orange cloud proxy enabled domain zone hostname enabled for Cloudflare R2 bucket public access for `WP_PLUGIN_INFO` bucket referenced in Cloudflare Worker that `get_plugins_r2.sh` talks to.
 
+* Local mirrored: `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.json`
+* Original Wordpress API end point: `https://api.wordpress.org/plugins/info/1.0/autoptimize.json`
+
 Also modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
 
 ```
@@ -1742,17 +1804,24 @@ Using Github Workflow to automate the script.
 
 ![Github Workflow](/screenshots/get_plugins_r2_workflow-02.png)
 
-Example of Cloudflare R2 S3 buckets populated with [WordPress plugin zip files](#cached-plugin) and [JSON metadata files](#mirrored-wordpress-plugin-api-end-point) using S3Browser to view the listings. The example is only using a selection of WordPress plugins I want to mirror for this POC. Script supports full mirror and cache of all >100K plugins.
+Example of Cloudflare R2 S3 buckets populated with all [WordPress plugin zip files](#cached-plugin) and [JSON metadata files](#mirrored-wordpress-plugin-api-end-point) using S3Browser to view the listings.
 
-![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-01.png)
+![Cloudflare R2 S3 Bucket](/screenshots/allplugins-get_plugins_r2_s3browser-listing-plugins-01.png)
 
-![Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-json-metadata-01.png)
+![Cloudflare R2 S3 Bucket](/screenshots/allplugins-get_plugins_r2_s3browser-listing-plugins-json-metadata-01.png)
 
 [Plugin checksum API](#mirrored-plugin-checksums) mirrored data i.e. at `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptimize/3.1.12.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/autoptimize/3.1.2.json`.
 
-![Plugin Checksums in Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-checksums-01.png)
+![Plugin Checksums in Cloudflare R2 S3 Bucket](/screenshots/allplugins-get_plugins_r2_s3browser-listing-plugins-checksums-01.png)
 
 ![Plugin Checksums in Cloudflare R2 S3 Bucket](/screenshots/get_plugins_r2_s3browser-listing-plugins-checksums-02.png)
+
+The count is off and it seems some plugin names are non-English and my script needs to account for this:
+
+```
+Error: Invalid plugin slug. for plugin 海阔淘宝相关宝贝插件
+Skipping 海阔淘宝相关宝贝插件 due to version fetch error.
+```
 
 ## WordPress Secret Keys API Generator
 
