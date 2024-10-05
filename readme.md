@@ -87,7 +87,7 @@ WordPress SVN repos:
 
 - **Checksum Verification**: The system now fetches and stores plugin checksums, enabling integrity verification of downloaded files.
 
-- **WordPress Plugin 1.2 API Bridge Worker**: An additional WordPress Plugin API Bridge Worker is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval
+- **WordPress Plugin 1.2 API Bridge Worker**: An additional WordPress Plugin API Bridge Worker is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval. This bridge worker eliminates the need for me to have any sort of database hosted as API 1.2 would just rely on the already mirrored API 1.0 JSON metadata stored in Cloudflare R2 object storage.
 
   ```bash
   curl -s -H "Accept: application/json" "https://api.mycloudflareproxy_domain.com/plugins/info/1.2/?action=plugin_information&slug=autoptimize&locale=en_US" | jq -r '[.name, .slug, .version, .download_link, .tested, .requires_php]'
