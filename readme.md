@@ -429,6 +429,103 @@ query R2ReadWriteOperations($ACCOUNT_ID: String!, $START_DATE: Time!, $END_DATE:
 }
 ```
 
+More recent R2 metrics from attempts at full WordPress plugin mirroring and populating R2 object storage:
+
+```bash
+./query_r2_graphql.sh
+GraphQL query saved to r2_graphql_query.graphql
+Checking last 30 minutes...
+No metrics found.
+
+Checking last 60 minutes...
+No metrics found.
+
+Checking last 120 minutes...
+No metrics found.
+
+Checking last 360 minutes...
+Metrics found!
+
+Checking last 720 minutes...
+Metrics found!
+
+Checking last 1440 minutes...
+Metrics found!
+
+Checking last 2880 minutes...
+Metrics found!
+
+Checking last 4320 minutes...
+Metrics found!
+
+Comprehensive Summary:
+
+Last 30 minutes:
+No metrics found
+
+Last 60 minutes:
+No metrics found
+
+Last 120 minutes:
+No metrics found
+
+Last 360 minutes:
+Querying data from 2024-10-05T08:23:38Z to 2024-10-05T14:23:38Z
+GetObject: 48245
+PutObject: 11168
+
+Last 720 minutes:
+Querying data from 2024-10-05T02:23:38Z to 2024-10-05T14:23:38Z
+GetObject: 201650
+PutObject: 28195
+
+Last 1440 minutes:
+Querying data from 2024-10-04T14:23:38Z to 2024-10-05T14:23:38Z
+GetObject: 464787
+PutObject: 111423
+
+Last 2880 minutes:
+Querying data from 2024-10-03T14:23:39Z to 2024-10-05T14:23:39Z
+GetObject: 469632
+PutObject: 114657
+
+Last 4320 minutes:
+Querying data from 2024-10-02T14:23:39Z to 2024-10-05T14:23:39Z
+GetObject: 470208
+PutObject: 114665
+
+Conclusion:
+Metrics were found in at least one time range.
+Most recent activity: Last 360 minutes
+
+Activity summary:
+- Last 4320 minutes:
+  Querying data from 2024-10-02T14:23:39Z to 2024-10-05T14:23:39Z
+  GetObject: 470208
+  PutObject: 114665
+- Last 2880 minutes:
+  Querying data from 2024-10-03T14:23:39Z to 2024-10-05T14:23:39Z
+  GetObject: 469632
+  PutObject: 114657
+- Last 1440 minutes:
+  Querying data from 2024-10-04T14:23:38Z to 2024-10-05T14:23:38Z
+  GetObject: 464787
+  PutObject: 111423
+- Last 720 minutes:
+  Querying data from 2024-10-05T02:23:38Z to 2024-10-05T14:23:38Z
+  GetObject: 201650
+  PutObject: 28195
+- Last 360 minutes:
+  Querying data from 2024-10-05T08:23:38Z to 2024-10-05T14:23:38Z
+  GetObject: 48245
+  PutObject: 11168
+
+Trend analysis:
+No activity in the last hour. Consider investigating if this is unexpected.
+Significant activity in the last 24 hours. Review the 24-hour metrics for a comprehensive overview.
+Activity detected in the last 72 hours. Compare with 24-hour and 48-hour metrics to identify trends.
+```
+
 ## System Overview
 
 The WordPress Plugin Mirror Downloader operates through a series of coordinated steps involving the bash script, Cloudflare Worker, and R2 storage. Here's a detailed breakdown of the process:
