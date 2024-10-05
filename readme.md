@@ -1969,7 +1969,7 @@ Install a WordPress from my local mirror hosted on Cloudlare R2 S3 object storag
 * Local mirrored: `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json`
 * Original Wordpress API end point: `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`
 
-As U modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
+As I have modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
 
 ```
 curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '[.download_link, .download_link_mirror]'
