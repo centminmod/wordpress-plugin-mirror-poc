@@ -14,6 +14,7 @@
    * [Cached Plugin](#cached-plugin)
    * [wget download speed test](#wget-download-speed-test)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
+   * [Demo WordPress Plugin Install Using Local Mirror](#demo-wordpress-plugin-install-using-local-mirror)
 4. [Screenshots](#screenshots)
 5. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
 
@@ -1897,6 +1898,230 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.js
     "turl": "https://profiles.wordpress.org/turl/"
   }
 }
+```
+
+### Demo WordPress Plugin Install Using Local Mirror
+
+An demo example of installing classic-editor WordPress plugin from local mirror I setup above.
+
+Here's my demo WordPress install details.
+
+```
+/usr/local/nginx/conf/wpincludes/wp.domain.com/wpinfo.sh
+WP-CLI 2.11.0
+WP-Home    https://wp.domain.com
+WP-SiteURL https://wp.domain.com
+WordPress  version:   6.6.2   
+Database   revision:  57155   
+TinyMCE    version:   4.9110  (49110-20201110)
+Package    language:  en_US   
++--------+---------------------------+--------------+---------------------------+--------------------------------+---------------+
+| ID     | user_login                | display_name | user_email                | user_registered                | roles         |
++--------+---------------------------+--------------+---------------------------+--------------------------------+---------------+
+| 270422 | zfTHxZdCjyOI2Wc1ijVyyhFKc | George       | user@domain.com           |                                |               |
++--------+---------------------------+--------------+---------------------------+--------------------------------+---------------+
++----------------------+------------------------------------------------------------------+----------+
+| name                 | value                                                            | type     |
++----------------------+------------------------------------------------------------------+----------+
+| table_prefix         | 27994_                                                           | variable |
+| WP_CACHE             | 1                                                                | constant |
+| DB_NAME              | wp27714970db_217913                                              | constant |
+| DB_USER              | wpdb2179u289199                                                  | constant |
+| DB_PASSWORD          | wpdbguZLh7nyyBfs82rD0tdrAgp31550                                 | constant |
+| DB_HOST              | localhost                                                        | constant |
+| DB_CHARSET           | utf8                                                             | constant |
+| DB_COLLATE           |                                                                  | constant |
+| DISABLE_WP_CRON      |                                                                  | constant |
+| WP_AUTO_UPDATE_CORE  | minor                                                            | constant |
+| WP_POST_REVISIONS    | 10                                                               | constant |
+| EMPTY_TRASH_DAYS     | 10                                                               | constant |
+| WP_CRON_LOCK_TIMEOUT | 60                                                               | constant |
+| CONCATENATE_SCRIPTS  |                                                                  | constant |
+| AUTH_KEY             | >EIS=P]/9ZNYZXeP:Rq<57n.}g@g+6<c<dUn*;fM@}k~i!++$:G:5E05U7&*Fimi | constant |
+| SECURE_AUTH_KEY      | <5?#Q=.]Zhy)?>}pylPKce8?G4~#P]cO`ar]t+qq%lA6]>Xh1U|z1:6z/wQ,!<uq | constant |
+| LOGGED_IN_KEY        | Unbk[.R*lotu}-a;MkXpG>{jfLWiN/4D!~*utpTvD24d!CHXHsh!:Dc(S7}4eYf: | constant |
+| NONCE_KEY            | 8<~A#rc3Za,A(K*Ai`V6W+1bM|J98W#mJqV4zuVUsMWXWK-L* 4PQoop0nJ;%]yp | constant |
+| AUTH_SALT            | `Y$8(lcu3nqF+:?6=;W{SbQS/=Qz#,-Yw@bbCn,V!U92BnyeVX^Q]X,4M:i[x!c7 | constant |
+| SECURE_AUTH_SALT     | bZ$CUXQR.@T7]~H?6ZwZ(bWsTL$-X+=5d??gT^iomZ+U[v&k>Ii$W^aprwH?*0d0 | constant |
+| LOGGED_IN_SALT       | t8$akq.p.ph^&roH|7p,aGp7Q%?ap!cM:zA/?FO`Ce-1_aHfoeiZs4Wqi`:#Vrl] | constant |
+| NONCE_SALT           | .>-51kySB$p}$yLS^~y9zkz[73g7#ifx3RoVG7,e?iaol<<7}98[]l!SmrD|$s=z | constant |
+| WP_CACHE_KEY_SALT    | (>4Q3dQ8F]&VZ>>v.xj-_(j}#<#Th<L1]=ROLg9@{S.5%QKJ>Y_[ S)aS2X4XssI | constant |
+| WP_DEBUG             |                                                                  | constant |
++----------------------+------------------------------------------------------------------+----------+
++-------------------------------+----------+--------+---------+----------------+-------------+
+| name                          | status   | update | version | update_version | auto_update |
++-------------------------------+----------+--------+---------+----------------+-------------+
+| autoptimize                   | active   | none   | 3.1.12  |                | off         |
+| disable-xml-rpc               | active   | none   | 1.0.1   |                | off         |
+| sucuri-scanner                | active   | none   | 1.9.5   |                | off         |
++-------------------------------+----------+--------+---------+----------------+-------------+
++-------------------+----------+--------+---------+----------------+-------------+
+| name              | status   | update | version | update_version | auto_update |
++-------------------+----------+--------+---------+----------------+-------------+
+| twentytwentyfour  | active   | none   | 1.2     |                | off         |
+| twentytwentythree | inactive | none   | 1.5     |                | off         |
+| twentytwentytwo   | inactive | none   | 1.8     |                | off         |
++-------------------+----------+--------+---------+----------------+-------------+
+```
+
+Install a WordPress from my local mirror hosted on Cloudlare R2 S3 object storage backed by Cloudflare CDN caching. You can query either WordPress or local mirror's JSON metadata to obtain the download url zip file.
+
+* Local mirrored: `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json`
+* Original Wordpress API end point: `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`
+
+As U modified the saved JSON metadata to insert an additional field for `download_link_mirror` which also lists the mirrored download url for the WordPress plugin along with existing `download_link` download link.
+
+```
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '[.download_link, .download_link_mirror]'
+[
+  "https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip",
+  "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+]
+```
+
+If you queried WordPress.org JSON metadata, you'll get the official plugin zip download url too.
+
+```
+curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json | jq -r '[.download_link]'
+[
+  "https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip"
+]
+```
+
+Let's grab my mirror's classic-editor plugin zip file via mirrored JSON metadata file.
+
+```
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '.download_link_mirror'
+
+https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip
+```
+
+Scripted wget download
+
+```
+download=$(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '.download_link_mirror')
+
+wget -S $download
+```
+```
+wget -S $download
+--2024-10-05 22:13:49--  https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip
+Resolving downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)... 104.xx.xxx.xxx, 104.xx.xxx.xxx, 2606:xxx.xxx.xxx, ...
+Connecting to downloads.mycloudflareproxy_domain.com (downloads.mycloudflareproxy_domain.com)|104.xx.xxx.xxx|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Date: Sat, 05 Oct 2024 22:13:49 GMT
+  Content-Type: application/zip
+  Content-Length: 19693
+  Connection: keep-alive
+  ETag: "563ed3f42294d2b34a82eeb0249eb204"
+  Last-Modified: Tue, 01 Oct 2024 16:06:32 GMT
+  Vary: Accept-Encoding
+  CF-Cache-Status: HIT
+  Age: 296
+  Expires: Tue, 05 Nov 2024 22:13:49 GMT
+  Cache-Control: public, max-age=2678400
+  Accept-Ranges: bytes
+  Server: cloudflare
+  CF-RAY: 8ce0c2d9086808da-LAX
+Length: 19693 (19K) [application/zip]
+Saving to: ‘classic-editor.1.6.5.zip’
+
+classic-editor.1.6.5.zip         100%[========================================================>]  19.23K  --.-KB/s    in 0.001s  
+
+2024-10-05 22:13:49 (23.7 MB/s) - ‘classic-editor.1.6.5.zip’ saved [19693/19693]
+```
+
+Now we have 3 ways of installing classic-editor plugin using WP CLI tool's native plugin install command https://developer.wordpress.org/cli/commands/plugin/install/:
+
+1. Install plugin zip using default wordpress.org download source
+2. Installing from local mirror downloaded plugin zip file
+3. Installing from remote mirror server's plugin zip file
+
+### 1. Install using default wordpress.org download source
+
+Notice installing package from `https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip`.
+
+```
+wp plugin install classic-editor
+```
+```
+wp plugin install classic-editor
+Installing Classic Editor (1.6.5)
+Downloading installation package from https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip...
+Using cached file '/root/.wp-cli/cache/plugin/classic-editor-1.6.5.zip'...
+Unpacking the package...
+Installing the plugin...
+Plugin installed successfully.
+Success: Installed 1 of 1 plugins.
+```
+
+and active it (yes we can do install and activate in one command too)
+
+```
+wp plugin activate classic-editor
+Plugin 'classic-editor' activated.
+Success: Activated 1 of 1 plugins.
+```
+
+### 2. Installing from local mirror downloaded plugin zip file
+
+```
+wp plugin install ./classic-editor.1.6.5.zip
+```
+```
+wp plugin install ./classic-editor.1.6.5.zip
+Unpacking the package...
+Installing the plugin...
+Plugin installed successfully.
+Success: Installed 1 of 1 plugins.
+```
+
+activate it
+
+```
+wp plugin activate classic-editor
+Plugin 'classic-editor' activated.
+Success: Activated 1 of 1 plugins.
+```
+
+### 3. Installing from remote mirror server's plugin zip file
+
+Notice installing plugin zip from local mirrored copy at `https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip`.
+
+```
+wp plugin install ./classic-editor.1.6.5.zip
+```
+```
+wp plugin install https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip
+Downloading installation package from https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip...
+Unpacking the package...
+Installing the plugin...
+Plugin installed successfully.
+Success: Installed 1 of 1 plugins.
+```
+
+activate it
+
+```
+wp plugin activate classic-editor
+Plugin 'classic-editor' activated.
+Success: Activated 1 of 1 plugins.
+```
+
+Checking installed WordPress plugin list
+
+```
+wp plugin list
++-------------------------------+----------+--------+---------+----------------+-------------+
+| name                          | status   | update | version | update_version | auto_update |
++-------------------------------+----------+--------+---------+----------------+-------------+
+| akismet                       | inactive | none   | 5.3.3   |                | off         |
+| autoptimize                   | active   | none   | 3.1.12  |                | off         |
+| classic-editor                | inactive | none   | 1.6.5   |                | off         |
+| disable-xml-rpc               | active   | none   | 1.0.1   |                | off         |
+| sucuri-scanner                | active   | none   | 1.9.5   |                | off         |
++-------------------------------+----------+--------+---------+----------------+-------------+
 ```
 
 ## Screenshots
