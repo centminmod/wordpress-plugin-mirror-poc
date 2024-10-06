@@ -7,6 +7,8 @@
    * [Key Components](#key-components)
    * [System Advantages](#system-advantages)
    * [Cloudflare Related Costs](#cloudflare-related-costs)
+     * [Cloudflare Workers Dashboard Metrics](#cloudflare-workers-dashboard-metrics)
+     * [Cloudflare R2 Dashboard Metrics](#cloudflare-r2-dashboard-metrics)
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
 3. [Examples](#examples)
@@ -281,6 +283,30 @@ Total Cost Breakdown:
 - Cloudflare Worker Subscription fee: $5.00
 
 Total Monthly Cost: $7,232.81 per month
+
+#### Cloudflare Workers Dashboard Metrics
+
+Here's the mirror's primary Cloudflare Workers' dashboard metrics. Includes all the testing I have done for the week - though only started October 2, 2024.
+
+![Cloudflare Workers Dashboard metrics](/screenshots/cf-workers-dashboard-01.png)
+
+#### Cloudflare R2 Dashboard Metrics
+
+Full WordPress plugin mirror populating just under 60K plugins and a few new versions of plugins included account = 35GB of storage used right now. You can see the Class A (writes) and Class B (read) metrics as well. This is only for R2 bucket for plugin zip files and plugin checksum files. A separate R2 bucket is used for plugin JSON metadata.
+
+![Cloudflare R2 Dashboard metrics](/screenshots/cf-r2-dashboard-01.png)
+
+Shows gradual increase in R2 bucket storage usage
+
+![Cloudflare R2 Dashboard metrics](/screenshots/cf-r2-dashboard-02.png)
+
+Class A writes
+
+![Cloudflare R2 Dashboard metrics](/screenshots/cf-r2-dashboard-03.png)
+
+Class B reads
+
+![Cloudflare R2 Dashboard metrics](/screenshots/cf-r2-dashboard-04.png)
 
 #### Cloudflare R2 GraphQL Metrics
 
