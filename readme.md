@@ -17,6 +17,10 @@
    * [wget download speed test](#wget-download-speed-test)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
    * [Demo WordPress Plugin Install Using Local Mirror](#demo-wordpress-plugin-install-using-local-mirror)
+     * [Install using default wordpress.org download source](#install-using-default-wordpress.org-download-source)
+     * [Installing from local mirror downloaded plugin zip file](#installing-from-local-mirror-downloaded-plugin-zip-file)
+     * [Installing from remote mirror server's plugin zip file](#installing-from-remote-mirror-server's-plugin-zip-file)
+     * [Demo WordPress Installed Plugin Checksum Verification](#demo-wordpress-installed-plugin-checksum-verification)
 4. [Screenshots](#screenshots)
 5. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
 
@@ -2112,7 +2116,7 @@ Now we have 3 ways of installing classic-editor plugin using WP CLI tool's nativ
 2. Installing from local mirror downloaded plugin zip file
 3. Installing from remote mirror server's plugin zip file
 
-### 1. Install using default wordpress.org download source
+#### 1. Install using default wordpress.org download source
 
 Notice installing package from `https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip`.
 
@@ -2138,7 +2142,7 @@ Plugin 'classic-editor' activated.
 Success: Activated 1 of 1 plugins.
 ```
 
-### 2. Installing from local mirror downloaded plugin zip file
+#### 2. Installing from local mirror downloaded plugin zip file
 
 ```
 wp plugin install ./classic-editor.1.6.5.zip
@@ -2159,7 +2163,7 @@ Plugin 'classic-editor' activated.
 Success: Activated 1 of 1 plugins.
 ```
 
-### 3. Installing from remote mirror server's plugin zip file
+#### 3. Installing from remote mirror server's plugin zip file
 
 Notice installing plugin zip from local mirrored copy at `https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip`.
 
@@ -2199,6 +2203,52 @@ wp plugin list
 ```
 
 For WordPress plugin update notifications, you could write a script that reads your WordPress installations plugin list using WP CLI tool and use WP CLI plugin status https://developer.wordpress.org/cli/commands/plugin/status/ to check for updates or script to check via mirrored JSON metadata query and have it trigger a WP CLI plugin update command https://developer.wordpress.org/cli/commands/plugin/update/. For added notifications, the script could setup mobile/tablet push notifications via servcies like pushover.net to alert you of new updates, sucessfull/failed updates etc.
+
+#### Demo WordPress Installed Plugin Checksum Verification
+
+Haven't gotten around to modifying WP CLI tool's plugin `verify-checksums` option https://developer.wordpress.org/cli/commands/plugin/verify-checksums/ to use my local mirror endpoint. So for now created a standalone script that can take a few command arguments to pass the `-p` path of your WordPress install and `-u` the remote url to the plugin's checksum JSON file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`
+
+```bash
+./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -u https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json
+Checksum verification: OK
+```
+
+`-d` debug mode lists checksum verification against each file separately
+
+```bash
+./wp-plugin-checksums.sh -d -p /home/nginx/domains/wp.domain.com/public -u https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json
+[OK] LICENSE.md: Checksum matches
+[OK] classic-editor.php: Checksum matches
+[OK] js/block-editor-plugin.js: Checksum matches
+[OK] readme.txt: Checksum matches
+Checksum verification: OK
+```
+```bash
+ls -lAh /home/nginx/domains/wp.domain.com/public/wp-content/plugins/classic-editor/
+total 68K
+-rw-r--r-- 1 nginx nginx  19K Oct  5 22:27 LICENSE.md
+-rw-r--r-- 1 nginx nginx  37K Oct  5 22:27 classic-editor.php
+drwxr-xr-x 2 nginx nginx   36 Oct  5 22:27 js
+-rw-r--r-- 1 nginx nginx 7.7K Oct  5 22:27 readme.txt
+```
+
+Can also take the official WordPress plugin checksum JSON file as source too.
+
+```bash
+./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -u https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json
+Checksum verification: OK
+```
+
+`-d` debug mode lists checksum verification against each file separately
+
+```bash
+./wp-plugin-checksums.sh -d -p /home/nginx/domains/wp.domain.com/public -u https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json
+[OK] LICENSE.md: Checksum matches
+[OK] classic-editor.php: Checksum matches
+[OK] js/block-editor-plugin.js: Checksum matches
+[OK] readme.txt: Checksum matches
+Checksum verification: OK
+```
 
 ## Screenshots
 
