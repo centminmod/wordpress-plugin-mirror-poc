@@ -2250,6 +2250,33 @@ Checksum verification: OK
 Checksum verification: OK
 ```
 
+You can get the plugin's version number via local mirrored plugin API 1.0 or official WordPress API 1.0 endpoints
+
+Local mirror `api.mycloudflareproxy_domain.com`:
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '.version'
+1.6.5
+```
+
+Official `api.wordpress.org`:
+
+```bash
+curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json | jq -r '.version'
+1.6.5
+```
+
+So something like:
+
+```bash
+# get plugin version from local mirror plugin JSON metadata
+ver=$(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq -r '.version')
+
+# query local mirror plugin JSON checksum data
+./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -u https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/${ver}.json
+Checksum verification: OK
+```
+
 ## Screenshots
 
 Using Github Workflow to automate the script.
