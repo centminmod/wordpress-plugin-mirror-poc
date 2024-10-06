@@ -88,6 +88,8 @@ WordPress SVN repos:
 
 - **Checksum Verification**: The system now fetches and stores plugin checksums, enabling integrity verification of downloaded files.
 
+- **Selective Plugin Processing**: New `-s` and `-e` options allow processing a specific range of plugins when used with the `-a` flag, enabling parallel processing of different plugin ranges.
+
 - **WordPress Plugin 1.2 API Bridge Worker**: An additional WordPress Plugin API Bridge Worker is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval. This bridge worker eliminates the need for me to have any sort of database hosted as API 1.2 would just rely on the already mirrored API 1.0 JSON metadata stored in Cloudflare R2 object storage.
 
   ```bash
@@ -585,7 +587,33 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
     - When activated, this mode allows the system to check and update the cache and R2 bucket without downloading files.
     - It's useful for preemptive caching, system checks, and reducing unnecessary downloads.
 
-12. **Plugin Checksum Verification**:
+12. **Selective Plugin Processing**:
+    - The `-s` and `-e` options, when used with `-a`, allow you to process a specific range of plugins from the SVN list. This feature is useful for:
+
+      - Distributing the workload across multiple machines or processes.
+      - Focusing on a specific subset of plugins for testing or analysis.
+      - Resuming a partially completed download process from a specific point.
+
+      To use this feature effectively:
+
+      1. Determine the total number of plugins in the SVN list.
+      2. Divide the total range into smaller chunks based on your processing capacity.
+      3. Run multiple instances of the script, each with a different range.
+
+      Example of running three parallel processes:
+
+      ```bash
+      # Terminal 1
+      ./get_plugins_r2.sh -a -s 1 -e 1000 -p 4 -d
+
+      # Terminal 2
+      ./get_plugins_r2.sh -a -s 1001 -e 2000 -p 4 -d
+
+      # Terminal 3
+      ./get_plugins_r2.sh -a -s 2001 -e 3000 -p 4 -d
+      ```
+
+13. **Plugin Checksum Verification**:
     - The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
 
     #### How it works:
@@ -637,6 +665,8 @@ time ./get_plugins_r2.sh -p 1 -d
 - `-t N`: Set the delay duration in seconds (e.g., `-t 5` for a 5-second delay)
 - `-f`: Force update of JSON metadata for all processed plugins
 - `-c`: Run in cache-only mode (check and update cache without downloading files)
+- `-s N`: Start processing plugins from line N in the SVN list (only used with `-a`)
+- `-e N`: End processing plugins at line N in the SVN list (only used with `-a`)
 
 Examples:
 
@@ -670,6 +700,15 @@ Examples:
 
 # Run in cache-only mode with debug and force update
 ./get_plugins_r2.sh -c -d -f
+
+# Process plugins from line 1 to 1000 in the SVN list
+./get_plugins_r2.sh -a -s 1 -e 1000
+
+# Process plugins from line 1001 to 2000 in the SVN list
+./get_plugins_r2.sh -a -s 1001 -e 2000
+
+# Process plugins from line 2001 to 3000 in the SVN list
+./get_plugins_r2.sh -a -s 2001 -e 3000
 ```
 
 Full `get_plugins_r2.sh` run.
