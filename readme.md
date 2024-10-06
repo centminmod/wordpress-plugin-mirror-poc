@@ -613,6 +613,15 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
       ./get_plugins_r2.sh -a -s 2001 -e 3000 -p 4 -d
       ```
 
+      Example output running 2 parallel threads in debug and cache only modes processing all SVN plugin list but for only first 4 plugins on the list:
+
+      ```bash
+      ./get_plugins_r2.sh -p 2 -d -c -a -s 1 -e 4
+      Processing plugins from line 1 to 4
+      Loaded 4 plugins.
+      Running in parallel with 2 jobs...
+      ```
+
 13. **Plugin Checksum Verification**:
     - The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
 
