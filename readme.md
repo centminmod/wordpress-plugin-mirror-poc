@@ -2250,6 +2250,26 @@ Checksum verification: OK
 Checksum verification: OK
 ```
 
+`-e` mode allows you to set the API endpoint domain you want to pull the plugins' JSON checksum files for all WordPress plugins installed. In below example `autoptimize-gzip` is a plugin installed outside of `wordpress.org` which enables `autoptimize` plugins file pre-compression for gzip and brolti. So `autoptimize-gzip` would not have an associated checksum JSON file.
+
+From local mirror API endpoint `downloads.mycloudflareproxy_domain.com`. Will only report invalid checksums by default when ran without `-d` debug mode:
+
+```bash
+./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -e downloads.mycloudflareproxy_domain.com
+No checksum data available for autoptimize-gzip (version 0.1)
+Skipping checksum verification for autoptimize-gzip (version 0.1)
+Checksum verification: OK
+```
+
+Official WordPress API endpoint `downloads.wordpress.org`. Will only report invalid checksums by default when ran without `-d` debug mode:
+
+```bash
+./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -e downloads.wordpress.org
+Failed to fetch or empty checksum data for autoptimize-gzip (version 0.1)
+Skipping checksum verification for autoptimize-gzip (version 0.1)
+Checksum verification: OK
+```
+
 You can get the plugin's version number via local mirrored plugin API 1.0 or official WordPress API 1.0 endpoints
 
 Local mirror `api.mycloudflareproxy_domain.com`:
