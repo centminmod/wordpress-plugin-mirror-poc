@@ -684,6 +684,72 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
        md5sum -c checksums.md5
        ```
 
+    #### Verification Of Plugin Checksums Against Official WordPress Version
+
+    As we are mirroring and caching WordPress's plugins checksum JSON data file, we can also compare our locally mirrored and cached copy against WordPress official WordPress plugin's checksum JSON data - making sure everything is legit and that you are indeed download the exact same WordPress plugin zip file as from official WordPress site when we [rely on the checksum data](#demo-wordpress-installed-plugin-checksum-verification).
+
+    A simple diff check against locally mirrored and cached copy of `classic-editor's checksum JSON data file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.jso` against official WordPress copy of checksum JSON data file `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`:
+
+    ```bash
+    diff -u <(curl -s https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json | jq -r) <(curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json | jq -r)
+    ```
+    ```diff
+    --- /dev/fd/63  2024-10-07 23:05:14.225476299 +0000
+    +++ /dev/fd/62  2024-10-07 23:05:14.225476299 +0000
+    @@ -20,5 +20,6 @@
+           "md5": "336c5ec12b70f9bb30d6b917fdc04a56",
+           "sha256": "44694da8b97d4e5b49cd8b678154c4078bb1ffef00ac37d09a593d26b8e8365d"
+         }
+    -  }
+    +  },
+    +  "zip_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+     })
+    ```
+
+    As you can see all the plugin's checksums are identical with only difference being in my locally mirrored and cached copy I also add `zip_mirror` link to the mirrored WordPress plugin's zip download file.
+
+    The same verification can be done for locally mirrored and cached WordPress plugin's JSON metadata file `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json` comparing it to official WordPress JSON metadata file `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`:
+
+    ```bash
+    diff -u <(curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)') <(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)')
+    ```
+    ```diff
+    --- /dev/fd/63  2024-10-07 05:48:20.895568307 +0000
+    +++ /dev/fd/62  2024-10-07 05:48:20.895568307 +0000
+    @@ -11,16 +11,16 @@
+       "compatibility": [],
+       "rating": 98,
+       "ratings": {
+    -    "5": 1143,
+    -    "4": 21,
+    -    "3": 8,
+    +    "1": 15,
+         "2": 4,
+    -    "1": 15
+    +    "3": 8,
+    +    "4": 21,
+    +    "5": 1143
+       },
+       "num_ratings": 1191,
+       "support_threads": 14,
+       "support_threads_resolved": 6,
+    -  "downloaded": 67406328,
+    +  "downloaded": 67346876,
+       "last_updated": "2024-09-27 9:53pm GMT",
+       "added": "2017-10-24",
+       "homepage": "https://wordpress.org/plugins/classic-editor/",
+    @@ -64,5 +64,6 @@
+         "desrosj": "https://profiles.wordpress.org/desrosj/",
+         "luciano-croce": "https://profiles.wordpress.org/luciano-croce/",
+         "ironprogrammer": "https://profiles.wordpress.org/ironprogrammer/"
+    -  }
+    +  },
+    +  "download_link_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+     }
+    ```
+
+    Here you see some cosmetic differences for ratings and download counts due to different times the plugin's JSON metadata was captured. Again the locally mirrored and cached copy also adds `download_link_mirror` link to the mirrored WordPress plugin's zip download file.
+
 This architecture allows for efficient, scalable, and resilient WordPress plugin management, leveraging the strengths of edge computing and distributed storage to create a robust mirroring system.
 
 ## Examples
