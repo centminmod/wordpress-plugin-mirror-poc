@@ -26,11 +26,11 @@
 
 ## Introduction
 
-On October 2, 2024, I began this proof of concept (POC) to develop a solution tailored to my specific needs. I will continually update this POC as I develop it further. So watch this space.
+On October 2, 2024, I began this proof of concept (POC) to develop a solution tailored to my specific needs - [automating WordPress core and plugin installations](#demo-wordpress-plugin-install-using-local-mirror) via [WP-CLI tool](https://wp-cli.org/).  I will continually update this POC as I develop it further. So watch this space.
 
-The WordPress Plugin Mirror Downloader is a robust system designed to efficiently download, cache, and manage WordPress plugins. This project serves as my proof of concept, with the hope that it might inspire others to create their own fallback solutions for WordPress.org, particularly during periods of downtime. It leverages Cloudflare's edge computing capabilities (including CDN, Workers, etc.) and R2 S3 object storage to provide a high-performance, scalable solution for plugin management. 
+The WordPress Plugin Mirror Downloader is a robust system designed to efficiently download, cache, and manage WordPress plugins. It leverages Cloudflare's edge computing capabilities (including CDN, Workers, etc.) and R2 S3 object storage to provide a high-performance, scalable solution for plugin management. This project serves as my proof of concept, with the hope that it might inspire others to create their own WordPress.org fallback solutions for their own specific usage requirements, particularly during periods of downtime.
 
-The below example shows that you could setup your own private WordPress plugin mirror with starting costs as low as US$5.35/month and [install your own locally mirrored WordPress plugins](#demo-wordpress-plugin-install-using-local-mirror). Or if you're an open source project it would be totally free via [Cloudflare Project Alexandria](https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/). Read the below info to see how it works.
+The below example shows that you could setup your own private WordPress plugin mirror with starting costs as low as US$5.35/month and [install your own locally mirrored WordPress plugins](#demo-wordpress-plugin-install-using-local-mirror). You can't have to mirror all WordPress plugins, you can selectively choose to mirror the plugins you use yourself. Or if you're an open source project it would be totally free via [Cloudflare Project Alexandria](https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/). Read the below info to see how it works.
 
 The method presented below focuses solely on mirroring and downloading WordPress plugin zip files, rather than mirroring the entire WordPress plugin SVN repository. This is because SVN repositories contain a complete history of all commits and versions for each WordPress plugin, which significantly increases the number of files and the amount of data that needs to be transferred. The way this script works means that you don't need a large amount of local disk storage, as its [cache-only mode](#examples) allows you to directly populate the [Cloudflare R2 S3 object storage bucket](#screenshots), bypassing the need for local downloads if desired. By default, however, local downloads are performed.
 
@@ -46,7 +46,9 @@ Disclaimer: I have been a Cloudflare customer since 2011 and an official Cloudfl
 
 Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/centminmod/003654673b3c6b11e10edc9353551fd2 and for test 53 WordPress plugins, total disk space to mirror them was approximately 40GB in size. So you will need alot less disk resources and bandwidth if you only focus on WordPress plugin zip files and not the entire SVN repository. In comparison with below mirroring of zip files only, the size for test run of 563 WordPress plugin zip files download and cache into Cloudflare R2 S3 object storage was ~1.27GB in size for zip files and ~18MB for plugin JSON metadata files. Rough maths for 563 plugins taking ~1.3GB storage space. So for 103K plugins would be ~238GB total storage space which will be beyond Cloudflare R2 S3 object storage's Forever Free tier of 10GB/month storage. So there would be additional storage costs - unless you are an open source project under [Cloudflare Project Alexandria](https://blog.cloudflare.com/expanding-our-support-for-oss-projects-with-project-alexandria/).
 
-You can also leverage Cloudflare R2 as mounted Linux FUSE mount via JuiceFS which caches file metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up and benchmarks for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
+You can also leverage Cloudflare R2 as mounted Linux FUSE mount via [JuiceFS](https://juicefs.com/docs/community/introduction/) which caches file metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up and benchmarks for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
+
+A an example of a JuiceFS FUSE mount on AlmaLinux based Linux server using Cloudflare R2 S3 object storage. The system would just see it as a regular mount for storage. Just be sure when creating Cloudflare R2 buckets you use location hints to ensure the R2 buckets are closest to your intended servers with the JuiceFS FUSE mount.
 
 ```
 df -hT /home/juicefs_mount
@@ -2042,7 +2044,7 @@ Package    language:  en_US
 +-------------------+----------+--------+---------+----------------+-------------+
 ```
 
-Install a WordPress from my local mirror hosted on Cloudlare R2 S3 object storage backed by Cloudflare CDN caching. You can query either WordPress or local mirror's JSON metadata to obtain the download url zip file.
+Now to install a WordPress plugin from my local mirror hosted on Cloudlare R2 S3 object storage backed by Cloudflare CDN caching. You can query either WordPress or local mirror's JSON metadata to obtain the download url zip file.
 
 * Local mirrored: `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json`
 * Original Wordpress API end point: `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`
@@ -2110,7 +2112,7 @@ classic-editor.1.6.5.zip         100%[==========================================
 2024-10-05 22:13:49 (23.7 MB/s) - ‘classic-editor.1.6.5.zip’ saved [19693/19693]
 ```
 
-Now we have 3 ways of installing classic-editor plugin using WP CLI tool's native plugin install command https://developer.wordpress.org/cli/commands/plugin/install/:
+Now we have 3 ways of installing classic-editor plugin using WP-CLI tool's native plugin install command https://developer.wordpress.org/cli/commands/plugin/install/:
 
 1. Install plugin zip using default wordpress.org download source
 2. Installing from local mirror downloaded plugin zip file
@@ -2202,11 +2204,11 @@ wp plugin list
 +-------------------------------+----------+--------+---------+----------------+-------------+
 ```
 
-For WordPress plugin update notifications, you could write a script that reads your WordPress installations plugin list using WP CLI tool and use WP CLI plugin status https://developer.wordpress.org/cli/commands/plugin/status/ to check for updates or script to check via mirrored JSON metadata query and have it trigger a WP CLI plugin update command https://developer.wordpress.org/cli/commands/plugin/update/. For added notifications, the script could setup mobile/tablet push notifications via servcies like pushover.net to alert you of new updates, sucessfull/failed updates etc.
+For WordPress plugin update notifications, you could write a script that reads your WordPress installations plugin list using WP-CLI tool and use WP-CLI plugin status https://developer.wordpress.org/cli/commands/plugin/status/ to check for updates or script to check via mirrored JSON metadata query and have it trigger a WP-CLI plugin update command https://developer.wordpress.org/cli/commands/plugin/update/. For added notifications, the script could setup mobile/tablet push notifications via servcies like pushover.net to alert you of new updates, sucessfull/failed updates etc.
 
 #### Demo WordPress Installed Plugin Checksum Verification
 
-Haven't gotten around to modifying WP CLI tool's plugin `verify-checksums` option https://developer.wordpress.org/cli/commands/plugin/verify-checksums/ to use my local mirror endpoint. So for now created a standalone script that can take a few command arguments to pass the `-p` path of your WordPress install and `-u` the remote url to the plugin's checksum JSON file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`
+Haven't gotten around to modifying WP-CLI tool's plugin `verify-checksums` option https://developer.wordpress.org/cli/commands/plugin/verify-checksums/ to use my local mirror endpoint. So for now created a standalone script that can take a few command arguments to pass the `-p` path of your WordPress install and `-u` the remote url to the plugin's checksum JSON file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json` which is meant to replicate the Wordpress.org version at `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`
 
 ```bash
 ./wp-plugin-checksums.sh -p /home/nginx/domains/wp.domain.com/public -u https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json
