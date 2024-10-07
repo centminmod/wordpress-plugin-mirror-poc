@@ -688,7 +688,7 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
 
     As we are mirroring and caching WordPress's plugins checksum JSON data file, we can also compare our locally mirrored and cached copy against WordPress official WordPress plugin's checksum JSON data - making sure everything is legit and that you are indeed download the exact same WordPress plugin zip file as from official WordPress site when we [rely on the checksum data](#demo-wordpress-installed-plugin-checksum-verification).
 
-    A simple diff check against locally mirrored and cached copy of `classic-editor's checksum JSON data file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.jso` against official WordPress copy of checksum JSON data file `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`:
+    A simple diff check against locally mirrored and cached copy of `classic-editor` checksum JSON data file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.jso` against official WordPress copy of checksum JSON data file `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`:
 
     ```bash
     diff -u <(curl -s https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json | jq -r) <(curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json | jq -r)
