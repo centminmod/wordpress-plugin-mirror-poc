@@ -688,7 +688,7 @@ This architecture allows for efficient, scalable, and resilient WordPress plugin
 
 ## Examples
 
-This example shows the WordPress plugins chosen to be downloaded were retrieved from existing Cloudflare R2 S3 object storage bucket instead of from WordPress.org as they were previously downloaded and cached. If you run script with `-c` cache only mode, it allows checking and updating the cache and R2 bucket without downloading files, useful for preemptive caching and system checks where you do not require actual downloading of plugin zip files to the server you ran the script from.
+This example shows the WordPress plugins chosen to be downloaded were retrieved from existing Cloudflare R2 S3 object storage bucket instead of from WordPress.org as they were previously downloaded and cached. If you run script with `-c` cache only mode, it allows checking and updating the cache and R2 bucket without downloading files, useful for preemptive caching and system checks where you do not require actual downloading of plugin zip files to the server you ran the script from. You can jump straight to a demo example of how the mirrored plugin zip files can be installed [here](#demo-wordpress-plugin-install-using-local-mirror).
 
 ### Basic Usage
 
@@ -1044,7 +1044,7 @@ cf-ray: 8cc7ad8048d87e9c-LAX
 
 ### Mirrored Plugin Checksums
 
-The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
+The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums. You can jump straight to a demo example of how the mirrored plugin checksum JSON files can be used [here](#demo-wordpress-installed-plugin-checksum-verification).
 
 #### How it works:
 
