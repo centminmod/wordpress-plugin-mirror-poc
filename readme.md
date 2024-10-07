@@ -48,7 +48,7 @@ Prior to this POC, I did try POC for SVN mirroring at https://gist.github.com/ce
 
 You can also leverage Cloudflare R2 as mounted Linux FUSE mount via [JuiceFS](https://juicefs.com/docs/community/introduction/) which caches file metadata for better performance and allows you to mount Cloudflare R2 S3 mounts in sharded mounts as well. See my write up and benchmarks for Cloudflare R2 + JuiceFS https://github.com/centminmod/centminmod-juicefs.
 
-A an example of a JuiceFS FUSE mount on AlmaLinux based Linux server using Cloudflare R2 S3 object storage. The system would just see it as a regular mount for storage. Just be sure when creating Cloudflare R2 buckets you use location hints to ensure the R2 buckets are closest to your intended servers with the JuiceFS FUSE mount.
+Example of a JuiceFS FUSE mount on AlmaLinux based Linux server using Cloudflare R2 S3 object storage. The system would just see it as a regular mount for storage. Just be sure when creating Cloudflare R2 buckets you use location hints to ensure the R2 buckets are closest to your intended servers with the JuiceFS FUSE mount.
 
 ```
 df -hT /home/juicefs_mount
