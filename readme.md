@@ -127,7 +127,7 @@ WordPress SVN repos:
 
 ### Cloudflare Related Costs
 
-Cloudflare CDN is free of charge, so only costs will be related to using Cloudflare Workers and Cloudflare R2 S3 object storage as outlined below. If you're only running your own private WordPress plugin mirror, costs will be relatively low compared to the 4 cost examples I outlined further below.
+Cloudflare CDN is free of charge, so only costs will be related to using Cloudflare Workers and Cloudflare R2 S3 object storage as outlined below. If you're only running your own private WordPress plugin mirror, costs will be relatively low compared to the 4 cost examples I outlined further below. I doubt it would cost more than US$5.35/month to begin with.
 
 For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
 
