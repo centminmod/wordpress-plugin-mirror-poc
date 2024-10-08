@@ -633,135 +633,135 @@ The WordPress Plugin Mirror Downloader operates through a series of coordinated 
     - It's useful for preemptive caching, system checks, and reducing unnecessary downloads.
 
 ### 12. **Selective Plugin Processing**:
-    - The `-s` and `-e` options, when used with `-a`, allow you to process a specific range of plugins from the SVN list. This feature is useful for:
+- The `-s` and `-e` options, when used with `-a`, allow you to process a specific range of plugins from the SVN list. This feature is useful for:
 
-      - Distributing the workload across multiple machines or processes.
-      - Focusing on a specific subset of plugins for testing or analysis.
-      - Resuming a partially completed download process from a specific point.
+  - Distributing the workload across multiple machines or processes.
+  - Focusing on a specific subset of plugins for testing or analysis.
+  - Resuming a partially completed download process from a specific point.
 
-      To use this feature effectively:
+  To use this feature effectively:
 
-      1. Determine the total number of plugins in the SVN list.
-      2. Divide the total range into smaller chunks based on your processing capacity.
-      3. Run multiple instances of the script, each with a different range.
+  1. Determine the total number of plugins in the SVN list.
+  2. Divide the total range into smaller chunks based on your processing capacity.
+  3. Run multiple instances of the script, each with a different range.
 
-      Example of running three parallel processes:
+  Example of running three parallel processes:
 
-      ```bash
-      # Terminal 1
-      ./get_plugins_r2.sh -a -s 1 -e 1000 -p 4 -d
+  ```bash
+  # Terminal 1
+  ./get_plugins_r2.sh -a -s 1 -e 1000 -p 4 -d
 
-      # Terminal 2
-      ./get_plugins_r2.sh -a -s 1001 -e 2000 -p 4 -d
+  # Terminal 2
+  ./get_plugins_r2.sh -a -s 1001 -e 2000 -p 4 -d
 
-      # Terminal 3
-      ./get_plugins_r2.sh -a -s 2001 -e 3000 -p 4 -d
-      ```
+  # Terminal 3
+  ./get_plugins_r2.sh -a -s 2001 -e 3000 -p 4 -d
+  ```
 
-      Example output running 2 parallel threads in debug and cache only modes processing all SVN plugin list but for only first 4 plugins on the list:
+  Example output running 2 parallel threads in debug and cache only modes processing all SVN plugin list but for only first 4 plugins on the list:
 
-      ```bash
-      ./get_plugins_r2.sh -p 2 -d -c -a -s 1 -e 4
-      Processing plugins from line 1 to 4
-      Loaded 4 plugins.
-      Running in parallel with 2 jobs...
-      ```
+  ```bash
+  ./get_plugins_r2.sh -p 2 -d -c -a -s 1 -e 4
+  Processing plugins from line 1 to 4
+  Loaded 4 plugins.
+  Running in parallel with 2 jobs...
+  ```
 
 ### 13. **Plugin Checksum Verification**:
-    - The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
+- The system now includes functionality to fetch, store, and verify plugin checksums. This new feature enhances security by allowing users to verify the integrity of downloaded plugin files against the official WordPress.org checksums.
 
-    #### How it works:
+#### How it works:
 
-    1. The system fetches official checksums from WordPress.org for each plugin.
-    2. Checksums are stored in the R2 bucket alongside plugin files and metadata.
-    3. Users can verify downloaded plugins against these checksums to ensure file integrity.
+1. The system fetches official checksums from WordPress.org for each plugin.
+2. Checksums are stored in the R2 bucket alongside plugin files and metadata.
+3. Users can verify downloaded plugins against these checksums to ensure file integrity.
 
-    #### Benefits:
+#### Benefits:
 
-    - Detect potentially tampered or corrupted plugin files
-    - Enhance overall security of the plugin management process
-    - Provide an additional layer of verification for cached plugins
+- Detect potentially tampered or corrupted plugin files
+- Enhance overall security of the plugin management process
+- Provide an additional layer of verification for cached plugins
 
-    #### Usage:
+#### Usage:
 
-    To manually verify a plugin's checksums:
+To manually verify a plugin's checksums:
 
-    1. Fetch the checksums:
-       ```bash
-       curl -s "https://your-worker-url.workers.dev?plugin=plugin-name&version=version&type=checksums" > checksums.json
-       ```
+1. Fetch the checksums:
+   ```bash
+   curl -s "https://your-worker-url.workers.dev?plugin=plugin-name&version=version&type=checksums" > checksums.json
+   ```
 
-    2. Use a tool like `jq` to parse the JSON and compare checksums:
-       ```bash
-       jq -r '.files[] | "\(.md5)  \(.filename)"' checksums.json > checksums.md5
-       md5sum -c checksums.md5
-       ```
+2. Use a tool like `jq` to parse the JSON and compare checksums:
+   ```bash
+   jq -r '.files[] | "\(.md5)  \(.filename)"' checksums.json > checksums.md5
+   md5sum -c checksums.md5
+   ```
 
-    #### Verification Of Plugin Checksums Against Official WordPress Version
+#### Verification Of Plugin Checksums Against Official WordPress Version
 
-    As we are mirroring and caching WordPress's plugins checksum JSON data file, we can also compare our locally mirrored and cached copy against WordPress official WordPress plugin's checksum JSON data - making sure everything is legit and that you are indeed download the exact same WordPress plugin zip file as from official WordPress site when we [rely on the checksum data](#demo-wordpress-installed-plugin-checksum-verification).
+As we are mirroring and caching WordPress's plugins checksum JSON data file, we can also compare our locally mirrored and cached copy against WordPress official WordPress plugin's checksum JSON data - making sure everything is legit and that you are indeed download the exact same WordPress plugin zip file as from official WordPress site when we [rely on the checksum data](#demo-wordpress-installed-plugin-checksum-verification).
 
-    A simple diff check against locally mirrored and cached copy of `classic-editor` checksum JSON data file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json` against official WordPress copy of checksum JSON data file `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`:
+A simple diff check against locally mirrored and cached copy of `classic-editor` checksum JSON data file `https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json` against official WordPress copy of checksum JSON data file `https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json`:
 
-    ```bash
-    diff -u <(curl -s https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json | jq -r) <(curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json | jq -r)
-    ```
-    ```diff
-    --- /dev/fd/63  2024-10-07 23:05:14.225476299 +0000
-    +++ /dev/fd/62  2024-10-07 23:05:14.225476299 +0000
-    @@ -20,5 +20,6 @@
-           "md5": "336c5ec12b70f9bb30d6b917fdc04a56",
-           "sha256": "44694da8b97d4e5b49cd8b678154c4078bb1ffef00ac37d09a593d26b8e8365d"
-         }
-    -  }
-    +  },
-    +  "zip_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
-     })
-    ```
-
-    As you can see all the plugin's checksums are identical with only difference being in my locally mirrored and cached copy I also add `zip_mirror` link to the mirrored WordPress plugin's zip download file.
-
-    The same verification can be done for locally mirrored and cached WordPress plugin's JSON metadata file `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json` comparing it to official WordPress JSON metadata file `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`:
-
-    ```bash
-    diff -u <(curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)') <(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)')
-    ```
-    ```diff
-    --- /dev/fd/63  2024-10-07 05:48:20.895568307 +0000
-    +++ /dev/fd/62  2024-10-07 05:48:20.895568307 +0000
-    @@ -11,16 +11,16 @@
-       "compatibility": [],
-       "rating": 98,
-       "ratings": {
-    -    "5": 1143,
-    -    "4": 21,
-    -    "3": 8,
-    +    "1": 15,
-         "2": 4,
-    -    "1": 15
-    +    "3": 8,
-    +    "4": 21,
-    +    "5": 1143
-       },
-       "num_ratings": 1191,
-       "support_threads": 14,
-       "support_threads_resolved": 6,
-    -  "downloaded": 67406328,
-    +  "downloaded": 67346876,
-       "last_updated": "2024-09-27 9:53pm GMT",
-       "added": "2017-10-24",
-       "homepage": "https://wordpress.org/plugins/classic-editor/",
-    @@ -64,5 +64,6 @@
-         "desrosj": "https://profiles.wordpress.org/desrosj/",
-         "luciano-croce": "https://profiles.wordpress.org/luciano-croce/",
-         "ironprogrammer": "https://profiles.wordpress.org/ironprogrammer/"
-    -  }
-    +  },
-    +  "download_link_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+```bash
+diff -u <(curl -s https://downloads.wordpress.org/plugin-checksums/classic-editor/1.6.5.json | jq -r) <(curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/classic-editor/1.6.5.json | jq -r)
+```
+```diff
+--- /dev/fd/63  2024-10-07 23:05:14.225476299 +0000
++++ /dev/fd/62  2024-10-07 23:05:14.225476299 +0000
+@@ -20,5 +20,6 @@
+       "md5": "336c5ec12b70f9bb30d6b917fdc04a56",
+       "sha256": "44694da8b97d4e5b49cd8b678154c4078bb1ffef00ac37d09a593d26b8e8365d"
      }
-    ```
+-  }
++  },
++  "zip_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+ })
+```
 
-    Here you see some cosmetic differences for ratings and download counts due to different times the plugin's JSON metadata was captured. Again the locally mirrored and cached copy also adds `download_link_mirror` link to the mirrored WordPress plugin's zip download file.
+As you can see all the plugin's checksums are identical with only difference being in my locally mirrored and cached copy I also add `zip_mirror` link to the mirrored WordPress plugin's zip download file.
+
+The same verification can be done for locally mirrored and cached WordPress plugin's JSON metadata file `https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json` comparing it to official WordPress JSON metadata file `https://api.wordpress.org/plugins/info/1.0/classic-editor.json`:
+
+```bash
+diff -u <(curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)') <(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-editor.json | jq 'del(.sections, .screenshots)')
+```
+```diff
+--- /dev/fd/63  2024-10-07 05:48:20.895568307 +0000
++++ /dev/fd/62  2024-10-07 05:48:20.895568307 +0000
+@@ -11,16 +11,16 @@
+   "compatibility": [],
+   "rating": 98,
+   "ratings": {
+-    "5": 1143,
+-    "4": 21,
+-    "3": 8,
++    "1": 15,
+     "2": 4,
+-    "1": 15
++    "3": 8,
++    "4": 21,
++    "5": 1143
+   },
+   "num_ratings": 1191,
+   "support_threads": 14,
+   "support_threads_resolved": 6,
+-  "downloaded": 67406328,
++  "downloaded": 67346876,
+   "last_updated": "2024-09-27 9:53pm GMT",
+   "added": "2017-10-24",
+   "homepage": "https://wordpress.org/plugins/classic-editor/",
+@@ -64,5 +64,6 @@
+     "desrosj": "https://profiles.wordpress.org/desrosj/",
+     "luciano-croce": "https://profiles.wordpress.org/luciano-croce/",
+     "ironprogrammer": "https://profiles.wordpress.org/ironprogrammer/"
+-  }
++  },
++  "download_link_mirror": "https://downloads.mycloudflareproxy_domain.com/classic-editor.1.6.5.zip"
+ }
+```
+
+Here you see some cosmetic differences for ratings and download counts due to different times the plugin's JSON metadata was captured. Again the locally mirrored and cached copy also adds `download_link_mirror` link to the mirrored WordPress plugin's zip download file.
 
 This architecture allows for efficient, scalable, and resilient WordPress plugin management, leveraging the strengths of edge computing and distributed storage to create a robust mirroring system.
 
