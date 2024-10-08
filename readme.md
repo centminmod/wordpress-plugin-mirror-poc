@@ -585,52 +585,52 @@ Activity detected in the last 72 hours. Compare with 24-hour and 48-hour metrics
 The WordPress Plugin Mirror Downloader operates through a series of coordinated steps involving the bash script, Cloudflare Worker, and R2 storage. Here's a detailed breakdown of the process:
 
 ### 1. **Plugin Identification**:
-   - The bash script reads a list of desired plugins from a configuration file or command-line arguments. It can also be set to read from a WordPress installation's plugin directory the list of WordPress plugins to download.
-   - It compares this list against a local cache of installed plugins and their versions.
-   - The script identifies plugins that need to be downloaded or updated based on version discrepancies.
+- The bash script reads a list of desired plugins from a configuration file or command-line arguments. It can also be set to read from a WordPress installation's plugin directory the list of WordPress plugins to download.
+- It compares this list against a local cache of installed plugins and their versions.
+- The script identifies plugins that need to be downloaded or updated based on version discrepancies.
 
 ### 2. **API Interaction**:
-   - For each plugin requiring action, the script queries the WordPress.org API to fetch the latest version information and download URL.
-   - This step ensures that the system always works with the most up-to-date plugin data.
+- For each plugin requiring action, the script queries the WordPress.org API to fetch the latest version information and download URL.
+- This step ensures that the system always works with the most up-to-date plugin data.
 
 ### 3. **Worker Request Generation**:
-   - The script constructs HTTP requests to the Cloudflare Worker for both the plugin ZIP file, the respective checksum file and its JSON metadata.
-   - These requests include query parameters specifying the plugin name, version, and desired content type (ZIP, checksum file or JSON).
+- The script constructs HTTP requests to the Cloudflare Worker for both the plugin ZIP file, the respective checksum file and its JSON metadata.
+- These requests include query parameters specifying the plugin name, version, and desired content type (ZIP, checksum file or JSON).
 
 ### 4. **Worker Processing**:
-   - Upon receiving a request, the Worker first checks if the requested data exists in the appropriate R2 bucket (WP_PLUGIN_STORE for ZIPs, WP_PLUGIN_INFO for JSONs).
-   - If the data is found in R2, the Worker serves it directly, incrementing the `r2Hits` metric.
-   - If not found, the Worker fetches the data from WordPress.org, stores it in R2, and then serves it. This process increments the `wordpressFetches` and `cacheMisses` metrics.
+- Upon receiving a request, the Worker first checks if the requested data exists in the appropriate R2 bucket (WP_PLUGIN_STORE for ZIPs, WP_PLUGIN_INFO for JSONs).
+- If the data is found in R2, the Worker serves it directly, incrementing the `r2Hits` metric.
+- If not found, the Worker fetches the data from WordPress.org, stores it in R2, and then serves it. This process increments the `wordpressFetches` and `cacheMisses` metrics.
 
 ### 5. **R2 Storage Interaction**:
-   - The Worker interacts with R2 storage using the `env.WP_PLUGIN_STORE` and `env.WP_PLUGIN_INFO` bindings.
-   - For storage, the Worker uses `put` operations with appropriate metadata.
-   - For retrieval, it uses `get` operations, falling back to WordPress.org if the object is not found.
+- The Worker interacts with R2 storage using the `env.WP_PLUGIN_STORE` and `env.WP_PLUGIN_INFO` bindings.
+- For storage, the Worker uses `put` operations with appropriate metadata.
+- For retrieval, it uses `get` operations, falling back to WordPress.org if the object is not found.
 
 ### 6. **Data Compression**:
-   - The Worker applies gzip compression to the response if the client supports it, as indicated by the `Accept-Encoding` header.
-   - This compression is performed using the `CompressionStream` API.
+- The Worker applies gzip compression to the response if the client supports it, as indicated by the `Accept-Encoding` header.
+- This compression is performed using the `CompressionStream` API.
 
 ### 7. **Response Handling**:
-   - The bash script receives the Worker's response, which includes the requested data (ZIP , checksum file or JSON) and relevant headers.
-   - It processes this response, saving the data to the local filesystem and updating its version tracking information.
+- The bash script receives the Worker's response, which includes the requested data (ZIP , checksum file or JSON) and relevant headers.
+- It processes this response, saving the data to the local filesystem and updating its version tracking information.
 
 ### 8. **Parallel Execution**:
-   - When configured for parallel processing, the bash script uses `xargs` to spawn multiple instances of the download process.
-   - This parallelization significantly reduces the total time required for bulk plugin updates.
+- When configured for parallel processing, the bash script uses `xargs` to spawn multiple instances of the download process.
+- This parallelization significantly reduces the total time required for bulk plugin updates.
 
 ### 9. **Logging and Metrics**:
-   - Throughout the process, both the Worker and bash script maintain detailed logs.
-   - The Worker tracks key metrics such as cache hits, WordPress fetches, and error counts.
-   - The bash script logs each step of its operation, including version checks, download attempts, and file operations.
+- Throughout the process, both the Worker and bash script maintain detailed logs.
+- The Worker tracks key metrics such as cache hits, WordPress fetches, and error counts.
+- The bash script logs each step of its operation, including version checks, download attempts, and file operations.
 
 ### 10. **Error Handling and Retries**:
-    - The system implements multiple layers of error handling, including network retries in the Worker and fallback mechanisms in the bash script.
-    - Detailed error messages are propagated from the Worker to the bash script, allowing for informed troubleshooting.
+- The system implements multiple layers of error handling, including network retries in the Worker and fallback mechanisms in the bash script.
+- Detailed error messages are propagated from the Worker to the bash script, allowing for informed troubleshooting.
 
 ### 11. **Cache-Only Mode**:
-    - When activated, this mode allows the system to check and update the cache and R2 bucket without downloading files.
-    - It's useful for preemptive caching, system checks, and reducing unnecessary downloads.
+- When activated, this mode allows the system to check and update the cache and R2 bucket without downloading files.
+- It's useful for preemptive caching, system checks, and reducing unnecessary downloads.
 
 ### 12. **Selective Plugin Processing**:
 - The `-s` and `-e` options, when used with `-a`, allow you to process a specific range of plugins from the SVN list. This feature is useful for:
