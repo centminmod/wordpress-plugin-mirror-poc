@@ -49,7 +49,7 @@ The method presented below focuses solely on mirroring and downloading WordPress
 
 To initially populate all 59,979 WordPress plugins into Cloudflare R2 S3 object storage, the process took approximately 25-30 minutes using [automated GitHub Workflow actions](#screenshots). I divided the list of plugins into 29 segments, each handled by a separate GitHub Workflow action that triggered the script in [cache-only mode](#examples), running across 29 Azure compute-based GitHub runner VPS servers with 4 CPU cores each. The script supports parallel mode so set it to use 4 threads for each Github runner server, so 29x4 = 116x CPU threads were utilised to concurrently download and populate the Cloudflare R2 S3 object storage buckets - saving plugin zip file, checksum file and JSON metadata. Github Pro plan only allows up to a max of 40 concurrent Github runner servers at a time so while there is room for further speed up, it has a cap. The plugins were ordered from most popular to least popular, allowing automated runs to prioritize updates for the most frequently used plugins.
 
-The cache-only mode was required due to the limited free disk space on GitHub Workflow's Azure-based VPS runners, as the 59,979 plugins occupied 32GB of space and their JSON metadata files used an additional 420MB. Though cache-only mode now no longer required as I discovered this [Github action](https://github.com/ngocptblaplafla/more-space-plz) which can recover nearly 50GB of disk space from an Azure based Github runner server. Based on [Cloudflare R2 S3 object storage costs](#cloudflare-related-costs) for 33GB of WordPress plugins, for a private WordPress plugin mirror would cost less than **US$0.35/month** though will rise as new plugin versions get downloaded and stored and if under generous R2 Class A/B write and read operation free monthly quota, the R2 operation costs would be free. The Cloudflare Worker costs based on past 24hrs metrics was 765K Worker requests at median of 2.1ms CPU time. So with 100K Worker requests/day free, cost would essentially be the **$5/month** Cloudflare Worker subscription fee as overages won't apply under their generous paid US$5/month subscription plan includes up to 10 million requests per month at average 10ms average CPU time. All up, it would be **US$5.35/month** starting costs which will rise as number of WordPress plugins and Worker and R2 read/write usage increases as outlined [here](#cloudflare-related-costs). If you're only running your own private WordPress plugin mirror, costs will be relatively low. Cloudflare CDN bandwidth is free of charge, so no need to worry about egress bandwidth fees.
+The cache-only mode was required due to the limited free disk space on GitHub Workflow's Azure-based VPS runners, as the 59,979 plugins occupied 32GB of space and their JSON metadata files used an additional 420MB. Though cache-only mode now no longer required as I discovered this [Github action](https://github.com/ngocptblaplafla/more-space-plz) which can recover nearly 50GB of disk space from an Azure based Github runner server. Based on [Cloudflare R2 S3 object storage costs](#cloudflare-related-costs) for 33GB of WordPress plugins, for a private WordPress plugin mirror would cost less than **US$0.35/month** though will rise as new plugin versions get downloaded and stored and if under generous R2 Class A/B write and read operation free monthly quota, the R2 operation costs would be free. The Cloudflare Worker costs based on past 24hrs metrics was 765K Worker requests at median of 2.1ms CPU time. So with 100K Worker requests/day free, cost would essentially be the **$5/month** Cloudflare Worker subscription fee as overages won't apply under their generous paid US$5/month subscription plan includes up to 10 million requests per month at average 10ms average CPU time. All up, it would be **US$5.35/month** starting costs which will rise as number of WordPress plugins and Worker and R2 read/write usage increases as outlined [here](#cloudflare-related-costs). If you are running a full WordPress mirror for private usage and have hourly syncing, check out my calculated costs based on the past week of doing syncing [here](#example-5---cost-calculation-for). If you're only running your own private WordPress plugin mirror, costs will be relatively low. Cloudflare CDN bandwidth is free of charge, so no need to worry about egress bandwidth fees.
 
 Given [Cloudflare CDN cached WordPress plugin download benchmark speeds](#cached-plugin), which showed 43 times faster download speeds and 82% lower latency compared to those served from WordPress.org, it's worth considering that Matt Mullenweg should take up Cloudflare CEO Matthew Prince's [offer of donating capacity to WordPress.org](https://x.com/eastdakota/status/1841154152006627663?t=L0e-TL1cPhkgckxPDG6nvg&s=19). This would dramatically reduce WordPress.org's infrastructure costs and enhance file download speeds. :sunglasses:
 
@@ -302,6 +302,94 @@ Total Cost Breakdown:
 - Cloudflare Worker Subscription fee: $5.00
 
 Total Monthly Cost: $7,232.81 per month
+
+#### Example 5 - cost calculation for:
+
+It's been a week since I created this POC and had time to do some metrics and cost calculations to have a better idea of operational costs for a full private self usage WordPress plugin mirror syncing if you are concerned with up to date WordPress plugin versions etc. Note these costs will be alot less if you choose only to select your few WordPress plugins you want to use.
+
+There are ~60K active opened WordPress plugins with latest version taking up a total of ~35GB of disk space. If I do hourly syncs of the mirror, these would be the estimated Cloudflare Worker and R2 costs below for each month - for 24x30 = 720 syncs/month. R2 disk usage would increase over time though as new WordPress plugins and version updates are added. Cloudflare CDN bandwidth is free always so not applicable in cost calculations.
+
+
+1. R2 Storage Costs
+   - Storage: 35 GB at $0.015 per GB-month
+   - First 10GB free = $0
+   - 25 * $0.015 = $0.375 per month
+
+2. R2 Operations
+   - Write operations (Class A): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 50K Class A writes to R2 bucket. For hourly syncing, that comes to 50k x 24 x 30 = 36 million R2 Class A writes
+   - First 1 million writes free = $0
+   - 35 * $4.50 = $157.50 per month
+   - Read operations (Class B): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 100K Class B reads to R2 bucket. For hourly syncing, that comes to 100k x 24 x 30 = 72 million R2 Class B reads
+   - First 10 million writes free = $0
+   - 62 * $0.36 = $22.32 per month
+
+3. Cloudflare Worker
+   - Requests: from Cloudflare Worker metrics each sync, is making 250K requests at 2.7ms medium CPU time. For hourly syncing, that comes to 250k x 24 x 30 = 180 million requests
+    - First 10 million included in Standard tier
+    - Additional 170 million at $0.30 per million
+    - 170 * $0.30 = $51.00 per month
+   - CPU time: 180 million * 2.7ms = 486 million CPU milliseconds
+    - First 30 million CPU milliseconds included
+    - Additional 150 million at $0.02 per million
+    - 150 * $0.02 = $3.00 per month
+   - $5/month subscription fee
+
+Total Cost Breakdown:
+
+- R2 Storage: $0.375
+- R2 Write Operations: $157.50
+- R2 Read Operations: $22.32 (reduced pricing if implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files)
+- Cloudflare Worker Requests: $51.00
+- Cloudflare Worker CPU time: $3
+- Cloudflare Worker Subscription fee: $5.00
+
+Total Monthly Cost: $239.20 per month
+
+<a name="synccosts"></a>
+The below table provides a good overview of how many syncs you can perform at different budget levels where the limiting factor is R2 Class A write operations costs for free tier.
+
+Based on following assumptions:
+
+1. R2 Storage: $0.375/month (fixed for 35GB, 10GB free)
+2. R2 Write Operations (Class A): 
+   - Free: 1 million/month
+   - Beyond: $4.50 per million
+3. R2 Read Operations (Class B):
+   - Free: 10 million/month
+   - Beyond: $0.36 per million
+4. Cloudflare Worker Requests:
+   - Free: 10 million/month
+   - Beyond: $0.30 per million
+5. Cloudflare Worker CPU time:
+   - Free: 30 million ms/month
+   - Beyond: $0.02 per million ms
+6. Cloudflare Worker Subscription fee: $5/month (fixed)
+
+So if each sync uses:
+
+- R2 Write Operations: 50,000
+- R2 Read Operations: 100,000
+- Worker Requests: 250,000
+- Worker CPU time: 675,000 ms
+
+If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component.
+
+| Budget | Syncs per Month | Limiting Factor | Approximate Frequency |
+|--------|-----------------|-----------------|------------------------|
+| Free Tier | 20 | R2 Class A operations | Every 36 hours |
+| $10/month | 29 | R2 Class A operations | Every 24.8 hours |
+| $20/month | 53 | R2 Class A operations | Every 13.6 hours |
+| $25/month | 65 | R2 Class A operations | Every 11 hours |
+| $30/month | 77 | R2 Class A operations | Every 9.4 hours |
+| $40/month | 101 | R2 Class A operations | Every 7.1 hours |
+| $50/month | 125 | R2 Class A operations | Every 5.8 hours |
+| $60/month | 149 | R2 Class A operations | Every 4.8 hours |
+| $75/month | 185 | R2 Class A operations | Every 3.9 hours |
+| $100/month | 245 | R2 Class A operations | Every 2.9 hours |
+| $125/month | 305 | R2 Class A operations | Every 2.4 hours |
+| $150/month | 365 | R2 Class A operations | Every 2 hours |
+| $200/month | 485 | R2 Class A operations | Every 1.5 hours |
+| $250/month | 725 | R2 Class A operations | Every 59.6 minutes |
 
 #### Cloudflare Workers Dashboard Metrics
 
