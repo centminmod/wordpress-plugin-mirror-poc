@@ -1574,6 +1574,7 @@ Alt-Svc: h3=":443"; ma=86400
 X-nc: MISS ord 7
 ```
 
+<a name="curltimes"></a>
 Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
 
 | Metric | Run | Cloudflare CDN (s) | Original WordPress (s) | Difference (s) | Percentage Difference (%) |
@@ -1690,6 +1691,9 @@ DNS,Connect,SSL,Wait,TTFB,Total Time
 | WordPress.org | 1 | 0.9 |
 | WordPress.org | 2 | 1.05 |
 
+<details>
+<summary>Show raw wget WordPress plugin zip download benchmarks</summary>
+
 Cloudflare CDN cached
 
 Run 1 = 37.8MB/s
@@ -1757,6 +1761,7 @@ Saving to: ‘/dev/null’
 
 2024-10-03 10:47:05 (1.05 MB/s) - ‘/dev/null’ saved [264379/264379
 ```
+</details>
 
 Looking closer at Wordpress.org download, not even sure they are properly caching the plugin files they are serving?  Looks like caching per datacenter as last test was a HIT - though no difference in download speed. Did 4 additional runs inspecting HTTP response headers and I see, `EXPIRED`, `MISS`, `MISS`, `HIT` statuses respectively for `x-nc` header.
 
