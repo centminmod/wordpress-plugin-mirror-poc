@@ -374,7 +374,7 @@ So if each sync uses:
 
 If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component.
 
-| Budget | Syncs per Month | Limiting Factor | Approximate Frequency |
+| Budget | Syncs per Month | Limiting Factor | Approximate Sync Frequency |
 |--------|-----------------|-----------------|------------------------|
 | Free Tier | 20 | R2 Class A operations | Every 36 hours |
 | $10/month | 29 | R2 Class A operations | Every 24.8 hours |
