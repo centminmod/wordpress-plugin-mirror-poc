@@ -128,7 +128,7 @@ WordPress SVN repos:
   ]
   ```
 
-- **Cloudflare D1 SQLite Database Support**: Optional [Cloudflare D1 SQLite database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database.
+- **Cloudflare D1 SQLite Database Support**: Optional [Cloudflare D1 SQLite database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database for adding WordPress plugins' JSON metadata and JSON checksum information.
 
 ### Cloudflare Related Costs
 
