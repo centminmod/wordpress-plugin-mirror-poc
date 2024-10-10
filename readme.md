@@ -86,7 +86,9 @@ WordPress SVN repos:
 
 2. **Cloudflare R2 Storage**: An S3-compatible object storage system used to cache [plugin ZIP files](#cached-plugin), [ZIP file checksums](#mirrored-plugin-checksums) and [plugin JSON metadata](#mirrored-wordpress-plugin-api-end-point). Cloudflare R2 S3 object storage has free egress bandwidth costs so you only pay for object storage and read/writes to object storage.
 
-3. **Bash Script**: A local client that orchestrates the plugin download process, interacts with the WordPress API, and communicates with the Cloudflare Worker.
+3. **Cloudflare DQ SQLite Database (optional)**: Optional [Cloudflare D1 SQLite databases](#14-cloudflare-d1-sqlite-database-support) for adding WordPress plugins' JSON metadata and JSON checksum information.
+
+4. **Bash Script**: A local client that orchestrates the plugin download process, interacts with the WordPress API, and communicates with the Cloudflare Worker.
 
 ### System Advantages
 
@@ -130,7 +132,7 @@ WordPress SVN repos:
 
 ### Cloudflare Related Costs
 
-Cloudflare CDN is free of charge, so only costs will be related to using Cloudflare Workers and Cloudflare R2 S3 object storage as outlined below. If you're only running your own private WordPress plugin mirror, costs will be relatively low compared to the 4 cost examples I outlined further below. I doubt it would cost more than US$5.35/month to begin with.
+Cloudflare CDN is free of charge, so only costs will be related to using Cloudflare Workers and Cloudflare R2 S3 object storage as outlined below. Optionally, you can also use [Cloudflare D1 SQLite databases](#14-cloudflare-d1-sqlite-database-support). If you're only running your own private WordPress plugin mirror, costs will be relatively low compared to the 4 cost examples I outlined further below. I doubt it would cost more than US$5.35/month to begin with.
 
 For Cloudflare Workers pricing https://developers.cloudflare.com/workers/platform/pricing/.
 
