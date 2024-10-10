@@ -439,7 +439,7 @@ Class B reads
 
 #### Cloudflare D1 SQLite Dashboard Metrics
 
-Full WordPress plugin mirror populating approximately 60K plugins's Cloudlare R2 stored JSON metadata and JSON checksum data into a Cloudflare D1 SQLite database. The script I ran with 8 parallel threads with each thread processing 200 batch scan and insertions into D1 SQLite database. I am still figuring out Cloudflare D1 SQLite's [rate limits](https://developers.cloudflare.com/d1/platform/limits/).
+Full WordPress plugin mirror populating approximately 60K plugins's Cloudlare R2 stored JSON metadata and JSON checksum data into a Cloudflare D1 SQLite database ended up occupying 2.04GB of disk space. The script I ran with 8 parallel threads with each thread processing 200 batch scan and insertions into D1 SQLite database. I am still figuring out Cloudflare D1 SQLite's [rate limits](https://developers.cloudflare.com/d1/platform/limits/).
 
 ```bash
 > SELECT COUNT(*) FROM plugins;
