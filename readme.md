@@ -858,11 +858,22 @@ Here you see some cosmetic differences for ratings and download counts due to di
 
 With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). As of October 10, 2024 my POC implementation can be used without binding to a Cloudflare D1 SQLite database for my use case. However, if was to create a web site for mirrored WordPress plugin listing directory via Cloudflare Workers or Cloudflare Pages, I would need to be able to query the locally cached and saved WordPress plugin JSON metadata info and plugin JSON checksum info. 
 
-I was curiously how that would implemented so created a third Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` that is binded to existing Cloudflare R2 S3 buckets for `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE` and binded to a Cloudflare D1 SQLite database `DB` variable. This would be a totally separate process from already outlined above system and can operate independently as an optional feature.
+I was curious how that would implemented so created a third Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` that is binded to existing Cloudflare R2 S3 buckets for `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE` and binded to a Cloudflare D1 SQLite database `DB` variable. This would be a totally separate process from already outlined above system and can operate independently as an optional feature.
 
-A shell script `scan_plugins_update_d1.sh` which talks with the Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` which supports several modes for - `single`, `batch`, and `all` so that I can insert a single WordPress by slug name into Cloudflare D1 SQLite database I created or batch or process all WordPress plugins in Cloudflare R2 buckets.
+Created a shell script `scan_plugins_update_d1.sh` which talks with the Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` which supports several modes for - `single`, `batch`, and `all` so that I can insert a single WordPress by slug name into Cloudflare D1 SQLite database I created or batch or process all WordPress plugins in Cloudflare R2 buckets.
 
-Below example is adding to Cloudflare D1 SQLite database `DB` the `akismet` WordPress plugin's JSON metadata and plugin JSON checksum info via the saved info in Cloudflare R2 buckets `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE`:
+An example of checking number WordPress plugins listed in Cloudflare R2 bucket so I can verify with eventually how many plugins are added to Cloudflare D1 SQLite database.
+
+```bash
+time ./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -C -d
+Total number of plugins: 60150
+
+real    0m44.850s
+user    0m0.020s
+sys     0m0.010s
+```
+
+An example is adding to Cloudflare D1 SQLite database `DB` the `akismet` WordPress plugin's JSON metadata and plugin JSON checksum info via the saved info in Cloudflare R2 buckets `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE`:
 
 ```bash
 ./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -m single -p akismet -d
@@ -884,17 +895,6 @@ Response:
 Querying the Cloudflare D1 SQLite database via Cloudflare D1 dashboard.
 ```bash
 > SELECT * FROM plugins WHERE slug = 'akismet';
-```
-
-Checking number WordPress plugins listed in Cloudflare R2 bucket so I can verify with eventually how many plugins are added to Cloudflare D1 SQLite database.
-
-```bash
-time ./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -C -d
-Total number of plugins: 60150
-
-real    0m44.850s
-user    0m0.020s
-sys     0m0.010s
 ```
 
 ![Cloudflare D1 SQLite database query](/screenshots/cloudflare-d1-sqlite-plugins-database-01.png)
