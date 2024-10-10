@@ -9,6 +9,7 @@
    * [Cloudflare Related Costs](#cloudflare-related-costs)
      * [Cloudflare Workers Dashboard Metrics](#cloudflare-workers-dashboard-metrics)
      * [Cloudflare R2 Dashboard Metrics](#cloudflare-r2-dashboard-metrics)
+     * [Cloudflare D1 SQLite Dashboard Metrics](#cloudflare-d1-sqlite-dashboard-metrics)
      * [Cloudflare R2 GraphQL Metrics](#cloudflare-r2-graphql-metrics)
 2. [System Overview](#system-overview)
      1.  [Plugin Identification](#1-plugin-identification)
@@ -435,6 +436,30 @@ Class A writes
 Class B reads
 
 ![Cloudflare R2 Dashboard metrics](/screenshots/cf-r2-dashboard-04.png)
+
+#### Cloudflare D1 SQLite Dashboard Metrics
+
+Full WordPress plugin mirror populating approximately 60K plugins's Cloudlare R2 stored JSON metadata and JSON checksum data into a Cloudflare D1 SQLite database. The script I ran with 8 parallel threads with each thread processing 200 batch scan and insertions into D1 SQLite database. I am still figuring out Cloudflare D1 SQLite's [rate limits](https://developers.cloudflare.com/d1/platform/limits/).
+
+```bash
+> SELECT COUNT(*) FROM plugins;
+COUNT(*)
+60137
+
+Response time 1973ms, query time 1.25ms
+```
+
+Queries
+
+![Cloudflare D1 SQLite Dashboard metrics](/screenshots/cf-d1-dashboard-01.png)
+
+Latencies
+
+![Cloudflare D1 SQLite Dashboard metrics](/screenshots/cf-d1-dashboard-02.png)
+
+Row Metrics
+
+![Cloudflare D1 SQLite Dashboard metrics](/screenshots/cf-d1-dashboard-03.png)
 
 #### Cloudflare R2 GraphQL Metrics
 
@@ -919,9 +944,15 @@ Querying the Cloudflare D1 SQLite database via Cloudflare D1 dashboard.
 
 ![Cloudflare D1 SQLite database query](/screenshots/cloudflare-d1-sqlite-plugins-database-01.png)
 
-Cloudflare D1 SQLite metrics for test run. Haven't processed all 60K plugins yet.
+Cloudflare D1 SQLite metrics for test run.
 
 ![Cloudflare D1 SQLite database query](/screenshots/cloudflare-d1-sqlite-plugins-database-02.png)
+
+Other D1 SQLite queries with full 60k WordPress plugins added.
+
+![Cloudflare D1 SQLite Dashboard console queries](/screenshots/cf-d1-dashboard-console-01.png)
+
+![Cloudflare D1 SQLite Dashboard console queries](/screenshots/cf-d1-dashboard-console-02.png)
 
 Just have to be aware of [Cloudflare D1 SQLite limits](https://developers.cloudflare.com/d1/platform/limits/)
 
