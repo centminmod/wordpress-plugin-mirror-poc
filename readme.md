@@ -129,7 +129,7 @@ WordPress SVN repos:
   ]
   ```
 
-- **Cloudflare D1 SQLite Database Support**: Optional [Cloudflare D1 SQLite database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database for adding WordPress plugins' JSON metadata and JSON checksum information.
+- **Cloudflare D1 SQLite Database Support**: Optional [Cloudflare D1 SQLite database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database for adding WordPress plugins' JSON metadata and JSON checksum information. You can track your [Cloudflare D1 SQLite dashboard metrics](#cloudflare-d1-sqlite-dashboard-metrics) as well.
 
 ### Cloudflare Related Costs
 
@@ -439,7 +439,7 @@ Class B reads
 
 #### Cloudflare D1 SQLite Dashboard Metrics
 
-Full WordPress plugin mirror populating approximately 60K plugins's Cloudlare R2 stored JSON metadata and JSON checksum data into a Cloudflare D1 SQLite database ended up occupying 2.04GB of disk space. The script I ran with 8 parallel threads with each thread processing 200 batch scan and insertions into D1 SQLite database. I am still figuring out Cloudflare D1 SQLite's [rate limits](https://developers.cloudflare.com/d1/platform/limits/).
+Full WordPress plugin mirror populating approximately 60K plugins's Cloudlare R2 stored JSON metadata and JSON checksum data into a Cloudflare D1 SQLite database ended up occupying 2.04GB of disk space. The script I ran with 8 parallel threads with each thread processing 200 batch scan and insertions into D1 SQLite database as outlined [here](#14-cloudflare-d1-sqlite-database-support). I am still figuring out Cloudflare D1 SQLite's [rate limits](https://developers.cloudflare.com/d1/platform/limits/).
 
 ```bash
 > SELECT COUNT(*) FROM plugins;
@@ -899,7 +899,7 @@ Here you see some cosmetic differences for ratings and download counts due to di
 
 ### 14. **Cloudflare D1 SQLite Database Support**:
 
-With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). Cloudflare D1 SQLite database also supports automatic backups and recovery via [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
+With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). Cloudflare D1 SQLite database also supports automatic backups and recovery via [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/). You can track your [Cloudflare D1 SQLite dashboard metrics](#cloudflare-d1-sqlite-dashboard-metrics) as well.
 
 As of October 10, 2024 my POC implementation can be used without binding to a Cloudflare D1 SQLite database for my use case. However, if was to create a web site for mirrored WordPress plugin listing directory via Cloudflare Workers or Cloudflare Pages, I would need to be able to query the locally cached and saved WordPress plugin JSON metadata info and plugin JSON checksum info. 
 
