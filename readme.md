@@ -862,7 +862,7 @@ I was curious how that would implemented so created a third Cloudflare Worker `h
 
 Created a shell script `scan_plugins_update_d1.sh` which talks with the Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` which supports several modes for - `single`, `batch`, and `all` so that I can insert a single WordPress by slug name into Cloudflare D1 SQLite database I created or batch or process all WordPress plugins in Cloudflare R2 buckets.
 
-An example of checking number WordPress plugins listed in Cloudflare R2 bucket so I can verify with eventually how many plugins are added to Cloudflare D1 SQLite database.
+An example of checking number WordPress plugins listed in Cloudflare R2 bucket so I can verify with eventually how many plugins are added to Cloudflare D1 SQLite database. Because Cloudflare R2 bucket and D1 SQLite databases are on the same provider, there are performance and speed advantages too.
 
 ```bash
 time ./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -C -d
