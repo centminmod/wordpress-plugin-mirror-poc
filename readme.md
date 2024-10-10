@@ -856,7 +856,9 @@ Here you see some cosmetic differences for ratings and download counts due to di
 
 ### 14. **Cloudflare D1 SQLITE Database Support**:
 
-With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). As of October 10, 2024 my POC implementation can be used without binding to a Cloudflare D1 SQLite database for my use case. However, if was to create a web site for mirrored WordPress plugin listing directory via Cloudflare Workers or Cloudflare Pages, I would need to be able to query the locally cached and saved WordPress plugin JSON metadata info and plugin JSON checksum info. 
+With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). Cloudflare D1 SQLite database also supports automatic backups and recovery via [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
+
+As of October 10, 2024 my POC implementation can be used without binding to a Cloudflare D1 SQLite database for my use case. However, if was to create a web site for mirrored WordPress plugin listing directory via Cloudflare Workers or Cloudflare Pages, I would need to be able to query the locally cached and saved WordPress plugin JSON metadata info and plugin JSON checksum info. 
 
 I was curious how that would implemented so created a third Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` that is binded to existing Cloudflare R2 S3 buckets for `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE` and binded to a Cloudflare D1 SQLite database `DB` variable. This would be a totally separate process from already outlined above system and can operate independently as an optional feature.
 
