@@ -24,6 +24,7 @@
      11. [Cache-Only Mode](#11-cache-only-mode)
      12. [Selective Plugin Processing](#12-selective-plugin-processing)
      13. [Plugin Checksum Verification](#13-plugin-checksum-verification)
+     14. [Cloudflare D1 SQLITE Database Support](#14-cloudflare-d1-sqlite-database-support)
 3. [Examples](#examples)
    * [Mirrored Plugin Checksums](#mirrored-plugin-checksums)
    * [Cached Plugin](#cached-plugin)
@@ -124,6 +125,8 @@ WordPress SVN repos:
     "5.6"
   ]
   ```
+
+- **Cloudflare D1 SQLITE Database Support**: Optional [Cloudflare D1 SQLITE database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database.
 
 ### Cloudflare Related Costs
 
@@ -851,7 +854,56 @@ diff -u <(curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json
 
 Here you see some cosmetic differences for ratings and download counts due to different times the plugin's JSON metadata was captured. Again the locally mirrored and cached copy also adds `download_link_mirror` link to the mirrored WordPress plugin's zip download file.
 
-This architecture allows for efficient, scalable, and resilient WordPress plugin management, leveraging the strengths of edge computing and distributed storage to create a robust mirroring system.
+### 14. **Cloudflare D1 SQLITE Database Support**:
+
+With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). As of October 10, 2024 my POC implementation can be used without binding to a Cloudflare D1 SQLite database for my use case. However, if was to create a web site for mirrored WordPress plugin listing directory via Cloudflare Workers or Cloudflare Pages, I would need to be able to query the locally cached and saved WordPress plugin JSON metadata info and plugin JSON checksum info. 
+
+I was curiously how that would implemented so created a third Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` that is binded to existing Cloudflare R2 S3 buckets for `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE` and binded to a Cloudflare D1 SQLite database `DB` variable. This would be a totally separate process from already outlined above system and can operate independently as an optional feature.
+
+A shell script `scan_plugins_update_d1.sh` which talks with the Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` which supports several modes for - `single`, `batch`, and `all` so that I can insert a single WordPress by slug name into Cloudflare D1 SQLite database I created or batch or process all WordPress plugins in Cloudflare R2 buckets.
+
+Below example is adding to Cloudflare D1 SQLite database `DB` the `akismet` WordPress plugin's JSON metadata and plugin JSON checksum info via the saved info in Cloudflare R2 buckets `WP_PLUGIN_INFO` and `WP_PLUGIN_STORE`:
+
+```bash
+./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -m single -p akismet -d
+Making request to: https://mycloudflare-d1-worker.domain.com?mode=single&debug=1&plugin=akismet
+Response:
+{
+  "processed": 1,
+  "updated": 1,
+  "errors": 0,
+  "message": "Processing complete",
+  "debugInfo": {
+    "totalProcessed": 1,
+    "updatedInD1": 1,
+    "errors": 0,
+    "errorDetails": []
+  }
+}
+```
+Querying the Cloudflare D1 SQLite database via Cloudflare D1 dashboard.
+```bash
+> SELECT * FROM plugins WHERE slug = 'akismet';
+```
+
+Checking number WordPress plugins listed in Cloudflare R2 bucket so I can verify with eventually how many plugins are added to Cloudflare D1 SQLite database.
+
+```bash
+time ./scan_plugins_update_d1.sh -u https://mycloudflare-d1-worker.domain.com -C -d
+Total number of plugins: 60150
+
+real    0m44.850s
+user    0m0.020s
+sys     0m0.010s
+```
+
+![Cloudflare D1 SQLite database query](/screenshots/cloudflare-d1-sqlite-plugins-database-01.png)
+
+Cloudflare D1 SQLite metrics for test run. Haven't processed all 60K plugins yet.
+
+![Cloudflare D1 SQLite database query](/screenshots/cloudflare-d1-sqlite-plugins-database-02.png)
+
+Just have to be aware of [Cloudflare D1 SQLite limits](https://developers.cloudflare.com/d1/platform/limits/)
 
 ## Examples
 
