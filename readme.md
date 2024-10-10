@@ -24,7 +24,7 @@
      11. [Cache-Only Mode](#11-cache-only-mode)
      12. [Selective Plugin Processing](#12-selective-plugin-processing)
      13. [Plugin Checksum Verification](#13-plugin-checksum-verification)
-     14. [Cloudflare D1 SQLITE Database Support](#14-cloudflare-d1-sqlite-database-support)
+     14. [Cloudflare D1 SQLite Database Support](#14-cloudflare-d1-sqlite-database-support)
 3. [Examples](#examples)
    * [Mirrored Plugin Checksums](#mirrored-plugin-checksums)
    * [Cached Plugin](#cached-plugin)
@@ -126,7 +126,7 @@ WordPress SVN repos:
   ]
   ```
 
-- **Cloudflare D1 SQLITE Database Support**: Optional [Cloudflare D1 SQLITE database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database.
+- **Cloudflare D1 SQLite Database Support**: Optional [Cloudflare D1 SQLite database support](#14-cloudflare-d1-sqlite-database-support) via a separate Cloudflare Worker binded to Cloudflare R2 buckets and D1 SQLite database.
 
 ### Cloudflare Related Costs
 
@@ -153,6 +153,22 @@ Cloudflare R2 free plan quota pricing and PAYGO pricing beyond free plan.
 | Class B operations: read existing state | 10,000,000 / month | $0.36 / million requests | $0.90 / million requests |
 | Data Retrieval (processing) | N/A | None | $0.01 / GB |
 | Egress (data transfer to Internet) | N/A | Free | Free |
+
+For [Cloudflare D1 SQLite pricing](https://developers.cloudflare.com/d1/platform/pricing/) which is optional and not really required for my particular usage of WordPress plugin mirror system. But if you want to use it check it out [here](#14-cloudflare-d1-sqlite-database-support).
+
+| Feature | Workers Free | Workers Paid |
+|---------|--------------|--------------|
+| Rows read | 5 million / day | First 25 billion / month included + $0.001 / million rows |
+| Rows written | 100,000 / day | First 50 million / month included + $1.00 / million rows |
+| Storage (per GB stored) | 5 GB (total) | First 5 GB included + $0.75 / GB-mo |
+
+Note:
+- Free limits reset daily at 00:00 UTC.
+- Monthly included limits for paid plans reset based on your monthly subscription renewal date.
+- There are no data transfer (egress) or throughput (bandwidth) charges for data accessed from D1.
+- Row size or the number of columns in a row does not impact how rows are counted.
+- DDL operations may contribute to a mix of read rows and write rows.
+- Indexes will add an additional written row when writes include the indexed column.
 
 The below first three examples have much higher R2 write estimations. With forth example probably closer to WordPress Plugin zip file mirroring.
 
@@ -854,7 +870,7 @@ diff -u <(curl -s https://api.wordpress.org/plugins/info/1.0/classic-editor.json
 
 Here you see some cosmetic differences for ratings and download counts due to different times the plugin's JSON metadata was captured. Again the locally mirrored and cached copy also adds `download_link_mirror` link to the mirrored WordPress plugin's zip download file.
 
-### 14. **Cloudflare D1 SQLITE Database Support**:
+### 14. **Cloudflare D1 SQLite Database Support**:
 
 With Cloudflare we can also optionally create Cloudflare Workers that are binded to their [Cloudflare D1 SQLite databases](https://developers.cloudflare.com/d1/) as outlined [here](https://developers.cloudflare.com/workers/runtime-apis/bindings/). Cloudflare D1 SQLite database also supports automatic backups and recovery via [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/).
 
