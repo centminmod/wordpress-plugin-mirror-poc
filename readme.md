@@ -26,7 +26,7 @@
      12. [Selective Plugin Processing](#12-selective-plugin-processing)
      13. [Plugin Checksum Verification](#13-plugin-checksum-verification)
      14. [Cloudflare D1 SQLite Database Support](#14-cloudflare-d1-sqlite-database-support)
-         * [Integration WordPress Plugins Download + R2 S3 Store + D1 SQLite Database](#integration-wordpress-plugins-download---r2-store---d1-sqlite-database)
+         * [Integration WordPress Plugins Download + R2 S3 Store + D1 SQLite Database](#integration-wordpress-plugins-download--r2-s3-store--d1-sqlite-database)
 3. [Examples](#examples)
    * [Mirrored Plugin Checksums](#mirrored-plugin-checksums)
    * [Cached Plugin](#cached-plugin)
@@ -928,16 +928,45 @@ Response:
 {
   "processed": 1,
   "updated": 1,
+  "unchanged": 0,
   "errors": 0,
   "message": "Processing complete",
   "debugInfo": {
     "totalProcessed": 1,
     "updatedInD1": 1,
+    "unchanged": 0,
     "errors": 0,
     "errorDetails": []
   }
 }
 ```
+
+The Cloudflare Worker `https://mycloudflare-d1-worker.domain.com` also logs plugin's checksum and message lengths and SQL query length to make sure it isn't hitting [Cloudflare D1 SQLite limits](https://developers.cloudflare.com/d1/platform/limits/). The messages length contain all data that is to be populated into D1 SQLite database.
+
+```json
+    {
+      "message": [
+        "Checksum data size: 5351 bytes"
+      ],
+      "level": "log",
+      "timestamp": 1728653251204
+    },
+    {
+      "message": [
+        "Info data size: 14099 bytes"
+      ],
+      "level": "log",
+      "timestamp": 1728653251204
+    },
+    {
+      "message": [
+        "SQL query length: 19610 bytes"
+      ],
+      "level": "log",
+      "timestamp": 1728653251667
+    }
+```
+
 Querying the Cloudflare D1 SQLite database via Cloudflare D1 dashboard.
 ```bash
 > SELECT * FROM plugins WHERE slug = 'akismet';
@@ -954,8 +983,6 @@ Other D1 SQLite queries with full 60k WordPress plugins added.
 ![Cloudflare D1 SQLite Dashboard console queries](/screenshots/cf-d1-dashboard-console-01.png)
 
 ![Cloudflare D1 SQLite Dashboard console queries](/screenshots/cf-d1-dashboard-console-02.png)
-
-Just have to be aware of [Cloudflare D1 SQLite limits](https://developers.cloudflare.com/d1/platform/limits/)
 
 #### Integration WordPress Plugins Download + R2 S3 Store + D1 SQLite Database
 
