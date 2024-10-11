@@ -26,6 +26,7 @@
      12. [Selective Plugin Processing](#12-selective-plugin-processing)
      13. [Plugin Checksum Verification](#13-plugin-checksum-verification)
      14. [Cloudflare D1 SQLite Database Support](#14-cloudflare-d1-sqlite-database-support)
+         * [Integration WordPress Plugins Download + R2 S3 Store + D1 SQLite Database](#integration-wordpress-plugins-download---r2-store---d1-sqlite-database)
 3. [Examples](#examples)
    * [Mirrored Plugin Checksums](#mirrored-plugin-checksums)
    * [Cached Plugin](#cached-plugin)
@@ -955,6 +956,55 @@ Other D1 SQLite queries with full 60k WordPress plugins added.
 ![Cloudflare D1 SQLite Dashboard console queries](/screenshots/cf-d1-dashboard-console-02.png)
 
 Just have to be aware of [Cloudflare D1 SQLite limits](https://developers.cloudflare.com/d1/platform/limits/)
+
+#### Integration WordPress Plugins Download + R2 S3 Store + D1 SQLite Database
+
+Updated `get_plugins_r2.sh` to add Cloudflare D1 SQLite integration so that after downloading and/or populating Cloudflare R2 S3 object storage buckets with JSON meta data and checksum JSON data, the script also calls `scan_plugins_update_d1.sh` to insert plugin's JSON meta data and checksum JSON data into the database via `-i -w https://mycloudflare-d1-worker.domain.com` arguments. These are optional arguments so you can choose whether or not you want to have a Cloudflare D1 SQLite database instance.
+
+Run with 1 thread, debug mode, cache-only mode, forced flag with import update to D1 SQLite database via the Cloudflare D1 SQLite worker url.
+
+```bash
+./get_plugins_r2.sh -p 1 -d -c -f -i -w https://mycloudflare-d1-worker.domain.com
+
+Processing plugin: advanced-custom-fields
+[DEBUG] Checking latest version and download link for advanced-custom-fields
+[DEBUG] Latest version for advanced-custom-fields: 6.3.6.1
+[DEBUG] API download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.1.zip
+[DEBUG] Stored version for advanced-custom-fields: 6.3.6
+[DEBUG] API-provided download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.1.zip
+[DEBUG] Constructed download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.1.zip
+[DEBUG] Using API-provided download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.1.zip
+[DEBUG] Downloading advanced-custom-fields version 6.3.6.1 through Cloudflare Worker
+[DEBUG] Plugin advanced-custom-fields version 6.3.6.1 cached successfully.
+Successfully processed advanced-custom-fields.
+Time taken for advanced-custom-fields: 0.1124 seconds
+[DEBUG] Saving plugin json metadata for advanced-custom-fields version 6.3.6.1
+[DEBUG] Plugin metadata for advanced-custom-fields version 6.3.6.1 cached successfully.
+[DEBUG] Successfully saved json metadata for advanced-custom-fields.
+[DEBUG] Fetching and saving checksums for advanced-custom-fields version 6.3.6.1
+[DEBUG] Sending request to Worker for checksums: ?plugin=advanced-custom-fields&version=6.3.6.1&type=checksums&force_update=true&cache_only=true
+[DEBUG] Plugin checksums for advanced-custom-fields version 6.3.6.1 cached successfully.
+[DEBUG] Successfully fetched and saved checksums for advanced-custom-fields.
+[DEBUG] Importing advanced-custom-fields version 6.3.6.1 to D1 database
+[DEBUG] D1 import response: Processing plugin: advanced-custom-fields
+Making request to: https://mycloudflare-d1-worker.domain.com?mode=single&debug=1&plugin=advanced-custom-fields&batchSize=1
+Response:
+{
+  "processed": 1,
+  "updated": 1,
+  "unchanged": 0,
+  "errors": 0,
+  "message": "Processing complete",
+  "debugInfo": {
+    "totalProcessed": 1,
+    "updatedInD1": 1,
+    "unchanged": 0,
+    "errors": 0,
+    "errorDetails": []
+  }
+}
+[DEBUG] Successfully imported advanced-custom-fields to D1 database.
+```
 
 ## Examples
 
