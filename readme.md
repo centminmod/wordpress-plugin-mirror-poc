@@ -988,7 +988,7 @@ Other D1 SQLite queries with full 60k WordPress plugins added.
 
 Updated `get_plugins_r2.sh` to add Cloudflare D1 SQLite integration so that after downloading and/or populating Cloudflare R2 S3 object storage buckets with JSON meta data and checksum JSON data, the script also calls `scan_plugins_update_d1.sh` to insert plugin's JSON meta data and checksum JSON data into the database via `-i -w https://mycloudflare-d1-worker.domain.com` arguments. These are optional arguments so you can choose whether or not you want to have a Cloudflare D1 SQLite database instance.
 
-Run with 1 thread, debug mode, cache-only mode, forced flag with import update to D1 SQLite database via the Cloudflare D1 SQLite worker url.
+Run with 1 thread, debug mode, cache-only mode, forced flag with import update to D1 SQLite database via the Cloudflare D1 SQLite worker url. Yes `advanced-custom-fields` plugin needs updating to it's new download link which I have plans for later on.
 
 ```bash
 ./get_plugins_r2.sh -p 1 -d -c -f -i -w https://mycloudflare-d1-worker.domain.com
