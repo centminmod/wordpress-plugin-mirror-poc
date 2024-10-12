@@ -175,7 +175,7 @@ Note:
 - Indexes will add an additional written row when writes include the indexed column.
 
 <a name="costs"></a>
-**October 10, 2024:** It's been a week since I created this POC and had time to do some metrics and cost calculations to have a better idea of operational costs for a full private self usage WordPress plugin mirror syncing if you are concerned with up to date WordPress plugin versions etc. Note these costs will be alot less if you choose only to select your few WordPress plugins you want to use. My previous estimated costs can still be been [here](#morecosts).
+**October 10, 2024:** It's been a week since I created this POC and had time to do some metrics and cost calculations to have a better idea of operational costs for a full private self usage WordPress plugin mirror syncing if you are concerned with up to date WordPress plugin versions etc. Note these costs will be alot less if you choose only to select your few WordPress plugins you want to use. My previous estimated costs can still be been [here](#morecosts) and you can see a table breaking down how many syncs you could do per month for various monthly budgets folks have [here](#synccosts).
 
 There are ~60K active opened WordPress plugins with latest version taking up a total of ~35GB of disk space. If I do hourly syncs of the mirror, these would be the estimated Cloudflare Worker and R2 costs below for each month - for 24x30 = 720 syncs/month. R2 disk usage would increase over time though as new WordPress plugins and version updates are added. Cloudflare CDN bandwidth is free always so not applicable in cost calculations.
 
