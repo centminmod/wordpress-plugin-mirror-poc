@@ -174,7 +174,95 @@ Note:
 - DDL operations may contribute to a mix of read rows and write rows.
 - Indexes will add an additional written row when writes include the indexed column.
 
-The below first three examples have much higher R2 write estimations. With forth example probably closer to WordPress Plugin zip file mirroring.
+<a name="costs"></a>
+**October 10, 2024:** It's been a week since I created this POC and had time to do some metrics and cost calculations to have a better idea of operational costs for a full private self usage WordPress plugin mirror syncing if you are concerned with up to date WordPress plugin versions etc. Note these costs will be alot less if you choose only to select your few WordPress plugins you want to use. My previous estimated costs can still be been [here](#morecosts).
+
+There are ~60K active opened WordPress plugins with latest version taking up a total of ~35GB of disk space. If I do hourly syncs of the mirror, these would be the estimated Cloudflare Worker and R2 costs below for each month - for 24x30 = 720 syncs/month. R2 disk usage would increase over time though as new WordPress plugins and version updates are added. Cloudflare CDN bandwidth is free always so not applicable in cost calculations.
+
+1. R2 Storage Costs
+   - Storage: 35 GB at $0.015 per GB-month
+   - First 10GB free = $0
+   - 25 * $0.015 = $0.375 per month
+
+2. R2 Operations
+   - Write operations (Class A): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 50K Class A writes to R2 bucket. For hourly syncing, that comes to 50k x 24 x 30 = 36 million R2 Class A writes
+   - First 1 million writes free = $0
+   - 35 * $4.50 = $157.50 per month
+   - Read operations (Class B): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 100K Class B reads to R2 bucket. For hourly syncing, that comes to 100k x 24 x 30 = 72 million R2 Class B reads
+   - First 10 million writes free = $0
+   - 62 * $0.36 = $22.32 per month
+
+3. Cloudflare Worker
+   - Requests: from Cloudflare Worker metrics each sync, is making 250K requests at 2.7ms medium CPU time. For hourly syncing, that comes to 250k x 24 x 30 = 180 million requests
+    - First 10 million included in Standard tier
+    - Additional 170 million at $0.30 per million
+    - 170 * $0.30 = $51.00 per month
+   - CPU time: 180 million * 2.7ms = 486 million CPU milliseconds
+    - First 30 million CPU milliseconds included
+    - Additional 150 million at $0.02 per million
+    - 150 * $0.02 = $3.00 per month
+   - $5/month subscription fee
+
+Total Cost Breakdown:
+
+- R2 Storage: $0.375
+- R2 Write Operations: $157.50
+- R2 Read Operations: $22.32 (reduced pricing if implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files)
+- Cloudflare Worker Requests: $51.00
+- Cloudflare Worker CPU time: $3
+- Cloudflare Worker Subscription fee: $5.00
+
+Total Monthly Cost: $239.20 per month
+
+<a name="synccosts"></a>
+The below table provides a good overview of how many syncs you can perform at different budget levels where the limiting factor is R2 Class A write operations costs for free tier.
+
+Based on following assumptions:
+
+1. R2 Storage: $0.375/month (fixed for 35GB, 10GB free)
+2. R2 Write Operations (Class A): 
+   - Free: 1 million/month
+   - Beyond: $4.50 per million
+3. R2 Read Operations (Class B):
+   - Free: 10 million/month
+   - Beyond: $0.36 per million
+4. Cloudflare Worker Requests:
+   - Free: 10 million/month
+   - Beyond: $0.30 per million
+5. Cloudflare Worker CPU time:
+   - Free: 30 million ms/month
+   - Beyond: $0.02 per million ms
+6. Cloudflare Worker Subscription fee: $5/month (fixed)
+
+So if each sync uses:
+
+- R2 Write Operations: 50,000
+- R2 Read Operations: 100,000
+- Worker Requests: 250,000
+- Worker CPU time: 675,000 ms
+
+If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component.
+
+| Budget | Syncs per Month | Limiting Factor | Approximate Sync Frequency |
+|--------|-----------------|-----------------|------------------------|
+| Free Tier | 20 | R2 Class A operations | Every 36 hours |
+| $10/month | 29 | R2 Class A operations | Every 24.8 hours |
+| $20/month | 53 | R2 Class A operations | Every 13.6 hours |
+| $25/month | 65 | R2 Class A operations | Every 11 hours |
+| $30/month | 77 | R2 Class A operations | Every 9.4 hours |
+| $40/month | 101 | R2 Class A operations | Every 7.1 hours |
+| $50/month | 125 | R2 Class A operations | Every 5.8 hours |
+| $60/month | 149 | R2 Class A operations | Every 4.8 hours |
+| $75/month | 185 | R2 Class A operations | Every 3.9 hours |
+| $100/month | 245 | R2 Class A operations | Every 2.9 hours |
+| $125/month | 305 | R2 Class A operations | Every 2.4 hours |
+| $150/month | 365 | R2 Class A operations | Every 2 hours |
+| $200/month | 485 | R2 Class A operations | Every 1.5 hours |
+| $250/month | 725 | R2 Class A operations | Every 59.6 minutes |
+
+<a name="morecosts"></a>
+<details>
+<summary>Click to expand other estimated cost calculations</summary>
 
 #### Example 1 - cost calculation for:
 
@@ -324,95 +412,8 @@ Total Cost Breakdown:
 - Cloudflare Worker CPU time: $599.40
 - Cloudflare Worker Subscription fee: $5.00
 
-Total Monthly Cost: $7,232.81 per month
-
-#### Example 5 - cost calculation for:
-
-It's been a week since I created this POC and had time to do some metrics and cost calculations to have a better idea of operational costs for a full private self usage WordPress plugin mirror syncing if you are concerned with up to date WordPress plugin versions etc. Note these costs will be alot less if you choose only to select your few WordPress plugins you want to use.
-
-There are ~60K active opened WordPress plugins with latest version taking up a total of ~35GB of disk space. If I do hourly syncs of the mirror, these would be the estimated Cloudflare Worker and R2 costs below for each month - for 24x30 = 720 syncs/month. R2 disk usage would increase over time though as new WordPress plugins and version updates are added. Cloudflare CDN bandwidth is free always so not applicable in cost calculations.
-
-
-1. R2 Storage Costs
-   - Storage: 35 GB at $0.015 per GB-month
-   - First 10GB free = $0
-   - 25 * $0.015 = $0.375 per month
-
-2. R2 Operations
-   - Write operations (Class A): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 50K Class A writes to R2 bucket. For hourly syncing, that comes to 50k x 24 x 30 = 36 million R2 Class A writes
-   - First 1 million writes free = $0
-   - 35 * $4.50 = $157.50 per month
-   - Read operations (Class B): from Cloudflare R2 metrics each sync with -f forced flag to bypass CDN cache, is making 100K Class B reads to R2 bucket. For hourly syncing, that comes to 100k x 24 x 30 = 72 million R2 Class B reads
-   - First 10 million writes free = $0
-   - 62 * $0.36 = $22.32 per month
-
-3. Cloudflare Worker
-   - Requests: from Cloudflare Worker metrics each sync, is making 250K requests at 2.7ms medium CPU time. For hourly syncing, that comes to 250k x 24 x 30 = 180 million requests
-    - First 10 million included in Standard tier
-    - Additional 170 million at $0.30 per million
-    - 170 * $0.30 = $51.00 per month
-   - CPU time: 180 million * 2.7ms = 486 million CPU milliseconds
-    - First 30 million CPU milliseconds included
-    - Additional 150 million at $0.02 per million
-    - 150 * $0.02 = $3.00 per month
-   - $5/month subscription fee
-
-Total Cost Breakdown:
-
-- R2 Storage: $0.375
-- R2 Write Operations: $157.50
-- R2 Read Operations: $22.32 (reduced pricing if implement Cloudflare CDN cache using [Cache Rules](https://developers.cloudflare.com/cache/how-to/cache-rules/) in front of R2 stored files)
-- Cloudflare Worker Requests: $51.00
-- Cloudflare Worker CPU time: $3
-- Cloudflare Worker Subscription fee: $5.00
-
-Total Monthly Cost: $239.20 per month
-
-<a name="synccosts"></a>
-The below table provides a good overview of how many syncs you can perform at different budget levels where the limiting factor is R2 Class A write operations costs for free tier.
-
-Based on following assumptions:
-
-1. R2 Storage: $0.375/month (fixed for 35GB, 10GB free)
-2. R2 Write Operations (Class A): 
-   - Free: 1 million/month
-   - Beyond: $4.50 per million
-3. R2 Read Operations (Class B):
-   - Free: 10 million/month
-   - Beyond: $0.36 per million
-4. Cloudflare Worker Requests:
-   - Free: 10 million/month
-   - Beyond: $0.30 per million
-5. Cloudflare Worker CPU time:
-   - Free: 30 million ms/month
-   - Beyond: $0.02 per million ms
-6. Cloudflare Worker Subscription fee: $5/month (fixed)
-
-So if each sync uses:
-
-- R2 Write Operations: 50,000
-- R2 Read Operations: 100,000
-- Worker Requests: 250,000
-- Worker CPU time: 675,000 ms
-
-If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component.
-
-| Budget | Syncs per Month | Limiting Factor | Approximate Sync Frequency |
-|--------|-----------------|-----------------|------------------------|
-| Free Tier | 20 | R2 Class A operations | Every 36 hours |
-| $10/month | 29 | R2 Class A operations | Every 24.8 hours |
-| $20/month | 53 | R2 Class A operations | Every 13.6 hours |
-| $25/month | 65 | R2 Class A operations | Every 11 hours |
-| $30/month | 77 | R2 Class A operations | Every 9.4 hours |
-| $40/month | 101 | R2 Class A operations | Every 7.1 hours |
-| $50/month | 125 | R2 Class A operations | Every 5.8 hours |
-| $60/month | 149 | R2 Class A operations | Every 4.8 hours |
-| $75/month | 185 | R2 Class A operations | Every 3.9 hours |
-| $100/month | 245 | R2 Class A operations | Every 2.9 hours |
-| $125/month | 305 | R2 Class A operations | Every 2.4 hours |
-| $150/month | 365 | R2 Class A operations | Every 2 hours |
-| $200/month | 485 | R2 Class A operations | Every 1.5 hours |
-| $250/month | 725 | R2 Class A operations | Every 59.6 minutes |
+Total Monthly Cost: $7,232.81 per 
+</details>
 
 #### Cloudflare Workers Dashboard Metrics
 
