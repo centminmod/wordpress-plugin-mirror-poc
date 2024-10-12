@@ -260,6 +260,8 @@ If you can live with syncing once per day, cost would start out at $10/month wit
 | $200/month | 485 | R2 Class A operations | Every 1.5 hours |
 | $250/month | 725 | R2 Class A operations | Every 59.6 minutes |
 
+#### Other Cost Estimations
+
 <a name="morecosts"></a>
 <details>
 <summary>Click to expand other estimated cost calculations</summary>
