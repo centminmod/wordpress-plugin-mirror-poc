@@ -241,7 +241,7 @@ So if each sync uses:
 - Worker Requests: 250,000
 - Worker CPU time: 675,000 ms
 
-If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component.
+If you can live with syncing once per day, cost would start out at $10/month with R2 object storage costs being the variable component. These are costs if you are mirroring and syncing all >60K WordPress plugins. Costs would be less if you are only mirroring and syncing your selective WordPress plugin list.
 
 | Budget | Syncs per Month | Limiting Factor | Approximate Sync Frequency |
 |--------|-----------------|-----------------|------------------------|
