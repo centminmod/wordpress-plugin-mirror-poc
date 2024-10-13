@@ -118,6 +118,7 @@ WordPress SVN repos:
 
 - **Selective Plugin Processing**: New `-s` and `-e` options allow processing a specific range of plugins when used with the `-a` flag, enabling parallel processing of different plugin ranges.
 
+<a name="bridge"></a>
 - **WordPress Plugin 1.2 API Bridge Worker**: An additional WordPress Plugin API Bridge Worker is created using a separate Cloudflare Worker. It is designed to bridge the gap between the WordPress Plugin API 1.0 and 1.2 versions `https://api.wordpress.org/plugins/info/1.0` vs `https://api.wordpress.org/plugins/info/1.2`. It allows clients to query plugin information using the 1.2 API format while fetching data from either a mirrored 1.0 API endpoint or the official WordPress.org 1.0 API, providing flexibility and reliability in data retrieval. This bridge worker eliminates the need for me to have any sort of database hosted as API 1.2 would just rely on the already mirrored API 1.0 JSON metadata stored in Cloudflare R2 object storage.
 
   ```bash
@@ -2928,7 +2929,7 @@ curl -s "https://api.wordpress.org/themes/info/1.2/?action=theme_information&slu
 }
 ```
 
-Now here's my local Cloudflare CDN mirrored and R2 S3 object store for `/themes/info/1.0/generatepress.json` JSON metadata where I also modifed and inserted my local mirror copy `download_link_mirror` for the WordPress theme at `https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip`.
+Now here's my local Cloudflare CDN mirrored and R2 S3 object store for `/themes/info/1.0/generatepress.json` JSON metadata where I also modifed and inserted my local mirror copy `download_link_mirror` for the WordPress theme at `https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip`. For local mirror's themes 1.2 API endpoint, plan to also setup a Cloudflare Worker based bridge like the [WordPress plugins 1.2 API endpoint](#bridge) that uses the saved `/themes/info/1.0/generatepress.json` JSON metadata as a database source - allowing my use case to not require setting up a database.
 
 ```bash
 curl -s "https://themes-api.mycloudflareproxy_domain.com/themes/info/1.0/generatepress.json" | jq -r '[.download_link, .download_link_mirror]'
