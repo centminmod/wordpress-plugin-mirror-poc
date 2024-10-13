@@ -39,6 +39,8 @@
      * [Demo WordPress Installed Plugin Checksum Verification](#demo-wordpress-installed-plugin-checksum-verification)
 4. [Screenshots](#screenshots)
 5. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
+6. [WordPress Themes Mirror](#wordpress-themes-mirror)
+   * [WordPress Themes Cloudflare CDN Benchmarks](#wordpress-themes-cloudflare-cdn-benchmarks)
 
 ## Introduction
 
@@ -1837,7 +1839,7 @@ curl -s https://downloads.mycloudflareproxy_domain.com/plugin-checksums/autoptim
 
 ### Cached Plugin
 
-Example of Cloudflare CDN cached plugin compared to Wordpress plugin download. Using Cloudflare CDN caching will improve download speed and improve latency for Wordpress plugin downloads and for your web site in general. See my tutorial write up on Cloudflare community forum - [Improving Time To First Byte (TTFB) With Cloudflare](https://community.cloudflare.com/t/improving-time-to-first-byte-ttfb-with-cloudflare/390367/).
+Example of Cloudflare CDN cached plugin compared to Wordpress plugin download. Using Cloudflare CDN caching will improve download speed and improve latency for Wordpress plugin downloads and for your web site in general. See my tutorial write up on Cloudflare community forum - [Improving Time To First Byte (TTFB) With Cloudflare](https://community.cloudflare.com/t/improving-time-to-first-byte-ttfb-with-cloudflare/390367/). You can also speed how fast Cloudflare CDN cached mirrored WordPress themes zip files are [here](#wordpress-themes-cloudflare-cdn-benchmarks).
 
 Cloudflare CDN cached
 
@@ -2757,3 +2759,631 @@ define('SECURE_AUTH_SALT', 'yW})O/%Q$YAW|1~[Y2?yinMw &U<<VW*_{0,}leIwA~?vaIP_K-~
 define('LOGGED_IN_SALT', 'gt,yqP|J7pA8yd)~JhSA>[L&p1r$G/H=(9P(CWqR=a([N&h<K~p`5QhzD59rG5uq');
 define('NONCE_SALT', 'X_c%R1Aqaw:.mO^Mr(J}[?ly-dScByC*0v*gafH>C#ptX~{Y?jU?C&C:%)GV;J}~');
 ```
+
+## WordPress Themes Mirror
+
+The above outlines my proof of concept WordPress plugins mirroring. Next stage is to replicate the same mirror system for WordPress themes' zip and JSON metadata files using `get_themes_r2.sh` shell script which talks with Cloudflare Worker `get_themes_r2.js`.
+
+There are currently 27,494 WordPress themes listed in Wordpress themes SVN repository at https://themes.svn.wordpress.org/ not all are published so need to filter them.
+
+### get_themes_r2.sh Basic Usage
+
+To run the script with default settings:
+
+```bash
+./get_themes_r2.sh
+```
+
+### get_themes_r2.sh Options
+
+- `-d`: Enable debug mode for more detailed logging
+- `-p N`: Set the number of parallel download jobs (e.g., `-p 4` for 4 parallel jobs)
+- `-a`: Download all available WordPress themes
+- `-l`: Create a list of all themes without downloading. Saved to file `${WORDPRESS_WORKDIR}/wp-theme-svn-list.txt`
+- `-D y`: Enable download delays
+- `-t N`: Set the delay duration in seconds (e.g., `-t 5` for a 5-second delay)
+- `-f`: Force update of JSON metadata for all processed themes
+- `-c`: Run in cache-only mode (check and update cache without downloading files)
+- `-s N`: Start processing themes from line N in the SVN list (only used with `-a`)
+- `-e N`: End processing themes at line N in the SVN list (only used with `-a`)
+- `-i`: Enable import to D1 database
+- `-w D1_WORKER_URL`: Set the URL for the D1 Worker
+
+Examples:
+
+```bash
+# Run with debug mode
+./get_themes_r2.sh -d
+
+# Run with 4 parallel jobs
+./get_themes_r2.sh -p 4
+
+# Download all themes
+./get_themes_r2.sh -a
+
+# List all themes without downloading
+./get_themes_r2.sh -l
+
+# Run with a 5-second delay between downloads
+./get_themes_r2.sh -D y -t 5
+
+# Run with debug mode, 4 parallel jobs, and a 3-second delay
+./get_themes_r2.sh -d -p 4 -D y -t 3
+
+# Force update JSON metadata for all processed themes
+./get_themes_r2.sh -f
+
+# Run with debug mode, 4 parallel jobs, a 3-second delay, and force update
+./get_themes_r2.sh -d -p 4 -D y -t 3 -f
+
+# Run in cache-only mode
+./get_themes_r2.sh -c
+
+# Run in cache-only mode with debug and force update
+./get_themes_r2.sh -c -d -f
+
+# Process themes from line 1 to 1000 in the SVN list
+./get_themes_r2.sh -a -s 1 -e 1000
+
+# Process themes from line 1001 to 2000 in the SVN list
+./get_themes_r2.sh -a -s 1001 -e 2000
+
+# Process themes from line 2001 to 3000 in the SVN list
+./get_themes_r2.sh -a -s 2001 -e 3000
+
+# Run with D1 database import enabled
+./get_themes_r2.sh -i -w https://your-d1-worker-url.workers.dev
+```
+
+### get_themes_r2.sh Example
+
+Example of downloading and mirroring to Cloudflare R2 S3 object store a single specified `generatepress` WordPress theme zip file. The script supports, specificied theme downloads, all themes downloads and also range of lines from themes' SVN list repository.
+
+```bash
+time ./get_themes_r2.sh -d                                                                                           
+
+Processing theme: generatepress
+[DEBUG] Checking latest version and download link for generatepress
+[DEBUG] Latest version for generatepress: 3.5.1
+[DEBUG] API download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Stored version for generatepress: 
+[DEBUG] API-provided download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Constructed download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Using API-provided download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Downloading generatepress version 3.5.1 through Cloudflare Worker
+[DEBUG] Successfully downloaded generatepress version 3.5.1 from WordPress
+[DEBUG] R2 bucket saving for theme zip occurred
+Successfully processed generatepress.
+Time taken for generatepress: 2.0124 seconds
+[DEBUG] Saving theme json metadata for generatepress version 3.5.1
+[DEBUG] json metadata for generatepress version 3.5.1 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for generatepress.
+Theme download process completed.
+
+real    0m3.651s
+user    0m0.080s
+sys     0m0.036s
+```
+
+WordPress themes API 1.0 endpoint doesn't seem to exist, so have to use API 1.2 endpoint to grab the WordPress themes JSON metadata. Here's the official `wordpress.org` themes API 1.2 endpoint result for `generatepress` theme.
+
+
+```bash
+curl -s "https://api.wordpress.org/themes/info/1.2/?action=theme_information&slug=generatepress" | jq -r
+{
+  "name": "GeneratePress",
+  "slug": "generatepress",
+  "version": "3.5.1",
+  "preview_url": "https://wp-themes.com/generatepress/",
+  "author": {
+    "user_nicename": "edge22",
+    "profile": "https://profiles.wordpress.org/edge22/",
+    "avatar": "https://secure.gravatar.com/avatar/dc8bc338c2ebbe1eb9c3cb92ea10486c?s=96&d=monsterid&r=g",
+    "display_name": "Tom",
+    "author": "Tom Usborne",
+    "author_url": "https://tomusborne.com"
+  },
+  "screenshot_url": "//ts.w.org/wp-content/themes/generatepress/screenshot.png?ver=3.5.1",
+  "rating": 100,
+  "num_ratings": 1421,
+  "reviews_url": "https://wordpress.org/support/theme/generatepress/reviews/",
+  "downloaded": 6091807,
+  "last_updated": "2024-09-04",
+  "last_updated_time": "2024-09-04 14:45:55",
+  "creation_time": "2014-05-15 03:45:18",
+  "homepage": "https://wordpress.org/themes/generatepress/",
+  "sections": {
+    "description": "GeneratePress is a lightweight WordPress theme built with a focus on speed and usability. Performance is important to us, which is why a fresh GeneratePress install adds less than 10kb (gzipped) to your page size. We take full advantage of the block editor (Gutenberg), which gives you more control over creating your content. If you use page builders, GeneratePress is the right theme for you. It is completely compatible with all major page builders, including Beaver Builder and Elementor. Thanks to our emphasis on WordPress coding standards, we can boast full compatibility with all well-coded plugins, including WooCommerce. GeneratePress is fully responsive, uses valid HTML/CSS, and is translated into over 25 languages by our amazing community of users. A few of our many features include 60+ color controls, powerful dynamic typography, 5 navigation locations, 5 sidebar layouts, dropdown menus (click or hover), and 9 widget areas. Learn more and check out our powerful premium version at https://generatepress.com"
+  },
+  "download_link": "https://downloads.wordpress.org/theme/generatepress.3.5.1.zip",
+  "tags": {
+    "blog": "Blog",
+    "buddypress": "BuddyPress",
+    "custom-background": "Custom background",
+    "custom-colors": "Custom colors",
+    "custom-header": "Custom header",
+    "custom-menu": "Custom menu",
+    "e-commerce": "E-commerce",
+    "featured-images": "Featured images",
+    "flexible-header": "Flexible header",
+    "footer-widgets": "Footer widgets",
+    "full-width-template": "Full width template",
+    "left-sidebar": "Left sidebar",
+    "one-column": "One column",
+    "right-sidebar": "Right sidebar",
+    "rtl-language-support": "RTL language support",
+    "sticky-post": "Sticky post",
+    "theme-options": "Theme options",
+    "threaded-comments": "Threaded comments",
+    "three-columns": "Three columns",
+    "translation-ready": "Translation ready",
+    "two-columns": "Two columns"
+  },
+  "requires": "6.1",
+  "requires_php": "7.4",
+  "is_commercial": true,
+  "external_support_url": "https://generatepress.com/support",
+  "is_community": false,
+  "external_repository_url": ""
+}
+```
+
+Now here's my local Cloudflare CDN mirrored and R2 S3 object store for `/themes/info/1.0/generatepress.json` JSON metadata where I also modifed and inserted my local mirror copy `download_link_mirror` for the WordPress theme at `https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip`.
+
+```bash
+curl -s "https://themes-api.mycloudflareproxy_domain.com/themes/info/1.0/generatepress.json" | jq -r '[.download_link, .download_link_mirror]'
+[
+  "https://downloads.wordpress.org/theme/generatepress.3.5.1.zip",
+  "https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip"
+]
+```
+
+Full output of local Cloudflare CDN mirrored and R2 S3 object for `themes/info/1.0/generatepress.json`.
+
+```json
+curl -s "https://themes-api.mycloudflareproxy_domain.com/themes/info/1.0/generatepress.json" | jq -r
+{
+  "name": "GeneratePress",
+  "slug": "generatepress",
+  "version": "3.5.1",
+  "preview_url": "https://wp-themes.com/generatepress/",
+  "author": {
+    "user_nicename": "edge22",
+    "profile": "https://profiles.wordpress.org/edge22/",
+    "avatar": "https://secure.gravatar.com/avatar/dc8bc338c2ebbe1eb9c3cb92ea10486c?s=96&d=monsterid&r=g",
+    "display_name": "Tom",
+    "author": "Tom Usborne",
+    "author_url": "https://tomusborne.com"
+  },
+  "screenshot_url": "//ts.w.org/wp-content/themes/generatepress/screenshot.png?ver=3.5.1",
+  "rating": 100,
+  "num_ratings": 1421,
+  "reviews_url": "https://wordpress.org/support/theme/generatepress/reviews/",
+  "downloaded": 6094504,
+  "last_updated": "2024-09-04",
+  "last_updated_time": "2024-09-04 14:45:55",
+  "creation_time": "2014-05-15 03:45:18",
+  "homepage": "https://wordpress.org/themes/generatepress/",
+  "sections": {
+    "description": "GeneratePress is a lightweight WordPress theme built with a focus on speed and usability. Performance is important to us, which is why a fresh GeneratePress install adds less than 10kb (gzipped) to your page size. We take full advantage of the block editor (Gutenberg), which gives you more control over creating your content. If you use page builders, GeneratePress is the right theme for you. It is completely compatible with all major page builders, including Beaver Builder and Elementor. Thanks to our emphasis on WordPress coding standards, we can boast full compatibility with all well-coded plugins, including WooCommerce. GeneratePress is fully responsive, uses valid HTML/CSS, and is translated into over 25 languages by our amazing community of users. A few of our many features include 60+ color controls, powerful dynamic typography, 5 navigation locations, 5 sidebar layouts, dropdown menus (click or hover), and 9 widget areas. Learn more and check out our powerful premium version at https://generatepress.com"
+  },
+  "download_link": "https://downloads.wordpress.org/theme/generatepress.3.5.1.zip",
+  "tags": {
+    "blog": "Blog",
+    "buddypress": "BuddyPress",
+    "custom-background": "Custom background",
+    "custom-colors": "Custom colors",
+    "custom-header": "Custom header",
+    "custom-menu": "Custom menu",
+    "e-commerce": "E-commerce",
+    "featured-images": "Featured images",
+    "flexible-header": "Flexible header",
+    "footer-widgets": "Footer widgets",
+    "full-width-template": "Full width template",
+    "left-sidebar": "Left sidebar",
+    "one-column": "One column",
+    "right-sidebar": "Right sidebar",
+    "rtl-language-support": "RTL language support",
+    "sticky-post": "Sticky post",
+    "theme-options": "Theme options",
+    "threaded-comments": "Threaded comments",
+    "three-columns": "Three columns",
+    "translation-ready": "Translation ready",
+    "two-columns": "Two columns"
+  },
+  "requires": "6.1",
+  "requires_php": "7.4",
+  "is_commercial": true,
+  "external_support_url": "https://generatepress.com/support",
+  "is_community": false,
+  "external_repository_url": "",
+  "download_link_mirror": "https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip"
+}
+```
+
+HTTP response headers for Cloudflare CDN cached and R2 S3 object stored JSON metadata files and theme zip file:
+
+```bash
+curl -I https://themes-api.mycloudflareproxy_domain.com/themes/info/1.0/generatepress.json
+HTTP/2 200 
+date: Sun, 13 Oct 2024 11:27:06 GMT
+content-length: 2843
+etag: "28e63751d8e1bd0dfe28f4c746cf951b"
+last-modified: Sun, 13 Oct 2024 10:50:03 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 24
+expires: Wed, 13 Nov 2024 11:27:06 GMT
+cache-control: public, max-age=2678400
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d1efa8469e33178-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+HTTP/2 200 
+date: Sun, 13 Oct 2024 11:30:10 GMT
+content-type: application/zip
+content-length: 1065626
+etag: "7637f7be37ad9d059fc1599dfe3fc3f5"
+last-modified: Sun, 13 Oct 2024 10:50:02 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 5
+expires: Wed, 13 Nov 2024 11:30:10 GMT
+cache-control: public, max-age=2678400
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d1efefcafc9477a-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+I have a separate script for querying the WordPress Themes API 1.2 endpoint, `query_themes.py` (also have one for `query_plugins.py`) used for quick verification purposes.
+
+```bash
+time ./query_themes.py -pages 1 -perpage 10 | jq -r
+[
+  {
+    "name": "Astra",
+    "slug": "astra",
+    "version": "4.8.3",
+    "tested": "5.3",
+    "requires_php": "5.3",
+    "downloaded": 13518954,
+    "rating": 98,
+    "last_updated": "2024-10-07",
+    "download_link": "https://downloads.wordpress.org/theme/astra.4.8.3.zip"
+  },
+  {
+    "name": "Twenty Twenty",
+    "slug": "twentytwenty",
+    "version": "2.7",
+    "tested": "4.7",
+    "requires_php": "5.2.4",
+    "downloaded": 10085058,
+    "rating": 88,
+    "last_updated": "2024-07-16",
+    "download_link": "https://downloads.wordpress.org/theme/twentytwenty.2.7.zip"
+  },
+  {
+    "name": "Twenty Twenty-One",
+    "slug": "twentytwentyone",
+    "version": "2.3",
+    "tested": "5.3",
+    "requires_php": "5.6",
+    "downloaded": 8521207,
+    "rating": 84,
+    "last_updated": "2024-07-16",
+    "download_link": "https://downloads.wordpress.org/theme/twentytwentyone.2.3.zip"
+  },
+  {
+    "name": "Hello Elementor",
+    "slug": "hello-elementor",
+    "version": "3.1.1",
+    "tested": "6.0",
+    "requires_php": "7.4",
+    "downloaded": 8173562,
+    "rating": 88,
+    "last_updated": "2024-07-30",
+    "download_link": "https://downloads.wordpress.org/theme/hello-elementor.3.1.1.zip"
+  },
+  {
+    "name": "OceanWP",
+    "slug": "oceanwp",
+    "version": "3.6.1",
+    "tested": "5.6",
+    "requires_php": "7.4",
+    "downloaded": 7781758,
+    "rating": 98,
+    "last_updated": "2024-10-08",
+    "download_link": "https://downloads.wordpress.org/theme/oceanwp.3.6.1.zip"
+  },
+  {
+    "name": "Twenty Twenty-Two",
+    "slug": "twentytwentytwo",
+    "version": "1.8",
+    "tested": "5.9",
+    "requires_php": "5.6",
+    "downloaded": 5890879,
+    "rating": 64,
+    "last_updated": "2024-07-16",
+    "download_link": "https://downloads.wordpress.org/theme/twentytwentytwo.1.8.zip"
+  },
+  {
+    "name": "Twenty Twenty-Three",
+    "slug": "twentytwentythree",
+    "version": "1.5",
+    "tested": "6.1",
+    "requires_php": "5.6",
+    "downloaded": 4229009,
+    "rating": 68,
+    "last_updated": "2024-07-16",
+    "download_link": "https://downloads.wordpress.org/theme/twentytwentythree.1.5.zip"
+  },
+  {
+    "name": "Kadence",
+    "slug": "kadence",
+    "version": "1.2.9",
+    "tested": "6.3",
+    "requires_php": "7.4",
+    "downloaded": 3018261,
+    "rating": 98,
+    "last_updated": "2024-08-20",
+    "download_link": "https://downloads.wordpress.org/theme/kadence.1.2.9.zip"
+  },
+  {
+    "name": "Twenty Twenty-Four",
+    "slug": "twentytwentyfour",
+    "version": "1.2",
+    "tested": "6.4",
+    "requires_php": "7.0",
+    "downloaded": 1665013,
+    "rating": 78,
+    "last_updated": "2024-07-16",
+    "download_link": "https://downloads.wordpress.org/theme/twentytwentyfour.1.2.zip"
+  },
+  {
+    "name": "CentralNews",
+    "slug": "centralnews",
+    "version": "1.2.12",
+    "tested": false,
+    "requires_php": "5.6",
+    "downloaded": 13485,
+    "rating": 100,
+    "last_updated": "2024-10-11",
+    "download_link": "https://downloads.wordpress.org/theme/centralnews.1.2.12.zip"
+  }
+]
+
+real    0m4.856s
+user    0m0.241s
+sys     0m0.023s
+```
+
+### WordPress Themes Cloudflare CDN Benchmarks
+
+Like the [WordPress mirrored benchmarks](#wget-download-speed-test), Cloudflare CDN is way faster. Cloudflare CDN is up to 28.6x faster for download speed and 87% faster in terms of latency response times.
+
+| Source | Run | Download Speed (MB/s) |
+|--------|-----|------------------------|
+| Cloudflare CDN | 1 | 209 |
+| Cloudflare CDN | 2 | 220 |
+| WordPress.org | 1 | 7.69 |
+| WordPress.org | 2 | 7.94 |
+
+Cloudflare CDN mirrored download run 1:
+
+```bash
+wget -O /dev/null -S https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+--2024-10-13 06:45:57--  https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+Resolving theme-downloads.mycloudflareproxy_domain.com (theme-downloads.mycloudflareproxy_domain.com)... 104.xxx.xxx.xxx, 104.xxx.xxx.xxx, 2606:xxx, ...
+Connecting to theme-downloads.mycloudflareproxy_domain.com (theme-downloads.mycloudflareproxy_domain.com)|104.xxx.xxx.xxx|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Date: Sun, 13 Oct 2024 11:45:58 GMT
+  Content-Type: application/zip
+  Content-Length: 1065626
+  Connection: keep-alive
+  ETag: "7637f7be37ad9d059fc1599dfe3fc3f5"
+  Last-Modified: Sun, 13 Oct 2024 10:50:02 GMT
+  Vary: Accept-Encoding
+  CF-Cache-Status: HIT
+  Age: 953
+  Expires: Wed, 13 Nov 2024 11:45:58 GMT
+  Cache-Control: public, max-age=2678400
+  Accept-Ranges: bytes
+  Server: cloudflare
+  CF-RAY: 8d1f1621c9916b57-DFW
+  alt-svc: h3=":443"; ma=86400
+Length: 1065626 (1.0M) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                100%[===============================================================================>]   1.02M  --.-KB/s    in 0.005s  
+
+2024-10-13 06:45:58 (209 MB/s) - ‘/dev/null’ saved [1065626/1065626]
+```
+
+run 2:
+
+```bash
+wget -O /dev/null -S https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+--2024-10-13 06:50:02--  https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+Resolving theme-downloads.mycloudflareproxy_domain.com (theme-downloads.mycloudflareproxy_domain.com)... 104.xxx.xxx.xxx, 104.xxx.xxx.xxx
+Connecting to theme-downloads.mycloudflareproxy_domain.com (theme-downloads.mycloudflareproxy_domain.com)|104.xxx.xxx.xxx|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Date: Sun, 13 Oct 2024 11:50:03 GMT
+  Content-Type: application/zip
+  Content-Length: 1065626
+  Connection: keep-alive
+  ETag: "7637f7be37ad9d059fc1599dfe3fc3f5"
+  Last-Modified: Sun, 13 Oct 2024 10:50:02 GMT
+  Vary: Accept-Encoding
+  CF-Cache-Status: HIT
+  Age: 1198
+  Expires: Wed, 13 Nov 2024 11:50:03 GMT
+  Cache-Control: public, max-age=2678400
+  Accept-Ranges: bytes
+  Server: cloudflare
+  CF-RAY: 8d1f1c1cfd6e4857-DFW
+  alt-svc: h3=":443"; ma=86400
+Length: 1065626 (1.0M) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                100%[===============================================================================>]   1.02M  --.-KB/s    in 0.005s  
+
+2024-10-13 06:50:03 (220 MB/s) - ‘/dev/null’ saved [1065626/1065626]
+```
+
+`wordpress.org` download run 1:
+
+```bash
+wget -O /dev/null -S https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+--2024-10-13 06:44:33--  https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Sun, 13 Oct 2024 11:44:34 GMT
+  Content-Type: application/zip
+  Content-Length: 1065626
+  Connection: close
+  Content-Disposition: attachment; filename=generatepress.3.5.1.zip
+  Content-MD5: 7637f7be37ad9d059fc1599dfe3fc3f5
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: MISS ord 4
+Length: 1065626 (1.0M) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                100%[===============================================================================>]   1.02M  --.-KB/s    in 0.1s    
+
+2024-10-13 06:44:34 (7.69 MB/s) - ‘/dev/null’ saved [1065626/1065626]
+```
+
+`wordpress.org` download run 2:
+
+```bash
+wget -O /dev/null -S https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+--2024-10-13 06:48:12--  https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+Resolving downloads.wordpress.org (downloads.wordpress.org)... 198.143.164.250
+Connecting to downloads.wordpress.org (downloads.wordpress.org)|198.143.164.250|:443... connected.
+HTTP request sent, awaiting response... 
+  HTTP/1.1 200 OK
+  Server: nginx
+  Date: Sun, 13 Oct 2024 11:48:13 GMT
+  Content-Type: application/zip
+  Content-Length: 1065626
+  Connection: close
+  Content-Disposition: attachment; filename=generatepress.3.5.1.zip
+  Content-MD5: 7637f7be37ad9d059fc1599dfe3fc3f5
+  Access-Control-Allow-Methods: GET, HEAD
+  Access-Control-Allow-Origin: *
+  Alt-Svc: h3=":443"; ma=86400
+  X-nc: MISS ord 4
+Length: 1065626 (1.0M) [application/zip]
+Saving to: ‘/dev/null’
+
+/dev/null                                100%[===============================================================================>]   1.02M  --.-KB/s    in 0.1s    
+
+2024-10-13 06:48:13 (7.94 MB/s) - ‘/dev/null’ saved [1065626/1065626]
+```
+
+<a name="curltimesthemes"></a>
+Comparing [`curltimes.sh`](https://github.com/centminmod/curltimes) for both
+
+| Metric | Run | Cloudflare CDN (s) | Original WordPress (s) | Difference (s) | Percentage Difference (%) |
+|--------|-----|---------------------|------------------------|----------------|---------------------------|
+| DNS Lookup | 1 | 0.017868 | 0.012266 | -0.005602 | -45.67% |
+|            | 2 | 0.016065 | 0.012368 | -0.003697 | -29.89% |
+|            | 3 | 0.012104 | 0.011892 | -0.000212 | -1.78% |
+| **DNS Avg** |  | **0.015346** | **0.012175** | **-0.003171** | **-26.05%** |
+| Connect | 1 | 0.019249 | 0.066082 | 0.046833 | 70.87% |
+|         | 2 | 0.017640 | 0.066095 | 0.048455 | 73.31% |
+|         | 3 | 0.013583 | 0.065603 | 0.052020 | 79.29% |
+| **Connect Avg** |  | **0.016824** | **0.065927** | **0.049103** | **74.48%** |
+| SSL | 1 | 0.040410 | 0.190844 | 0.150434 | 78.83% |
+|     | 2 | 0.039722 | 0.188994 | 0.149272 | 78.98% |
+|     | 3 | 0.036624 | 0.188560 | 0.151936 | 80.58% |
+| **SSL Avg** |  | **0.038919** | **0.189466** | **0.150547** | **79.46%** |
+| TTFB | 1 | 0.074087 | 0.247062 | 0.172975 | 70.01% |
+|      | 2 | 0.082480 | 0.245153 | 0.162673 | 66.36% |
+|      | 3 | 0.079275 | 0.502297 | 0.423022 | 84.22% |
+| **TTFB Avg** |  | **0.078614** | **0.331504** | **0.252890** | **76.29%** |
+| Total Time | 1 | 0.087251 | 0.631285 | 0.544034 | 86.18% |
+|            | 2 | 0.095769 | 0.655155 | 0.559386 | 85.38% |
+|            | 3 | 0.092491 | 0.855737 | 0.763246 | 89.19% |
+| **Total Avg** |  | **0.091837** | **0.714059** | **0.622222** | **87.14%** |
+
+Cloudflare CDN cached
+
+```bash
+./curltimes.sh json https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+curl 7.76.1
+TLSv1.2 ECDHE-ECDSA-CHACHA20-POLY1305
+Connected to theme-downloads.mycloudflareproxy_domain.com (104.xxx.xxx.xxx) port 443 (#0)
+Cloudflare proxied https://theme-downloads.mycloudflareproxy_domain.com/generatepress.3.5.1.zip
+Sample Size: 3
+
+DNS,Connect,SSL,Wait,TTFB,Total Time
+{
+        "time_dns":             0.017868,
+        "time_connect":         0.019249,
+        "time_appconnect":      0.040410,
+        "time_pretransfer":     0.040497,
+        "time_ttfb":            0.074087,
+        "time_total":           0.087251
+}{
+        "time_dns":             0.016065,
+        "time_connect":         0.017640,
+        "time_appconnect":      0.039722,
+        "time_pretransfer":     0.039789,
+        "time_ttfb":            0.082480,
+        "time_total":           0.095769
+}{
+        "time_dns":             0.012104,
+        "time_connect":         0.013583,
+        "time_appconnect":      0.036624,
+        "time_pretransfer":     0.036688,
+        "time_ttfb":            0.079275,
+        "time_total":           0.092491
+}
+```
+
+Original Wordpress plugin
+
+```bash
+./curltimes.sh json https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+TLSv1.2 ECDHE-ECDSA-CHACHA20-POLY1305
+Connected to downloads.wordpress.org (198.143.164.250) port 443 (#0)
+Sample Size: 3
+
+DNS,Connect,SSL,Wait,TTFB,Total Time
+{
+        "time_dns":             0.012266,
+        "time_connect":         0.066082,
+        "time_appconnect":      0.190844,
+        "time_pretransfer":     0.190920,
+        "time_ttfb":            0.247062,
+        "time_total":           0.631285
+}{
+        "time_dns":             0.012368,
+        "time_connect":         0.066095,
+        "time_appconnect":      0.188994,
+        "time_pretransfer":     0.189173,
+        "time_ttfb":            0.245153,
+        "time_total":           0.655155
+}{
+        "time_dns":             0.011892,
+        "time_connect":         0.065603,
+        "time_appconnect":      0.188560,
+        "time_pretransfer":     0.188627,
+        "time_ttfb":            0.502297,
+        "time_total":           0.855737
+}
+```
+
