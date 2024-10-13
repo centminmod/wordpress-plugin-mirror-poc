@@ -2866,6 +2866,37 @@ user    0m0.080s
 sys     0m0.036s
 ```
 
+Re-run with `-c` cache only mode so script only populates Cloudflare R2 S3 object storage bucket without downloading locally which is nearly 85% faster than having to download it locally.
+
+```bash
+rm -f /home/nginx/domains/themes.domain.com/public/generatepress.3.5.1.zip 
+
+time ./get_themes_r2.sh -d -c
+
+Processing theme: generatepress
+[DEBUG] Latest version for generatepress: 3.5.1
+[DEBUG] API download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Stored version for generatepress: 3.5.1
+[DEBUG] API-provided download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Constructed download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Using API-provided download link for generatepress: https://downloads.wordpress.org/theme/generatepress.3.5.1.zip
+[DEBUG] Downloading generatepress version 3.5.1 through Cloudflare Worker
+[DEBUG] Theme generatepress version 3.5.1 cached successfully.
+Successfully processed generatepress.
+Time taken for generatepress: 0.0999 seconds
+[DEBUG] Saving theme json metadata for generatepress version 3.5.1
+[DEBUG] Theme metadata for generatepress version 3.5.1 cached successfully.
+[DEBUG] Successfully saved json metadata for generatepress.
+Theme download process completed.
+
+real    0m0.549s
+user    0m0.073s
+sys     0m0.027s
+
+ls -lAh /home/nginx/domains/themes.domain.com/public/generatepress.3.5.1.zip 
+ls: cannot access '/home/nginx/domains/themes.domain.com/public/generatepress.3.5.1.zip': No such file or directory
+```
+
 WordPress themes API 1.0 endpoint doesn't seem to exist, so have to use API 1.2 endpoint to grab the WordPress themes JSON metadata. Here's the official `wordpress.org` themes API 1.2 endpoint result for `generatepress` theme.
 
 
