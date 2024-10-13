@@ -3164,7 +3164,7 @@ sys     0m0.023s
 
 ### WordPress Themes Cloudflare CDN Benchmarks
 
-Like the [WordPress mirrored benchmarks](#wget-download-speed-test), Cloudflare CDN is way faster. Cloudflare CDN is up to 28.6x faster for download speed and 87% faster in terms of latency response times.
+Like the [WordPress plugins mirror benchmarks](#wget-download-speed-test), Cloudflare CDN is way faster. Cloudflare CDN is up to 28.6x faster for download speed and 87% faster in terms of latency response times.
 
 | Source | Run | Download Speed (MB/s) |
 |--------|-----|------------------------|
