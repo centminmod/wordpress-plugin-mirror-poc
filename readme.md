@@ -991,7 +991,7 @@ Other D1 SQLite queries with full 60k WordPress plugins added.
 
 Updated `get_plugins_r2.sh` to add Cloudflare D1 SQLite integration so that after downloading and/or populating Cloudflare R2 S3 object storage buckets with JSON meta data and checksum JSON data, the script also calls `scan_plugins_update_d1.sh` to insert plugin's JSON meta data and checksum JSON data into the database via `-i -w https://mycloudflare-d1-worker.domain.com` arguments. These are optional arguments so you can choose whether or not you want to have a Cloudflare D1 SQLite database instance.
 
-Run with 1 thread, debug mode, cache-only mode, forced flag with import update to D1 SQLite database via the Cloudflare D1 SQLite worker url. Yes `advanced-custom-fields` plugin needs updating to it's new download link which I have plans for later on.
+Run with 1 thread, debug mode, cache-only mode, forced flag with import update to D1 SQLite database via the Cloudflare D1 SQLite worker url.
 
 ```bash
 ./get_plugins_r2.sh -p 1 -d -c -f -i -w https://mycloudflare-d1-worker.domain.com
@@ -1035,6 +1035,39 @@ Response:
 }
 [DEBUG] Successfully imported advanced-custom-fields to D1 database.
 ```
+
+<a name="acf"></a>
+Yes `advanced-custom-fields` plugin needs updating to it's new download link as Wordpress.org has now hijacked and stolen WPEngine's Advanced Custom Fields (ACF) plugin and renamed it as Secure Custom Fields but kept the plugin slugname and removed all links to ACF Pro upsell.
+
+The stolen hijacked ACF listing on `wordpress.org` now listed name as `Secure Custom Fields` with `6.3.6.2` version:
+
+```json
+curl -s https://api.wordpress.org/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.name, .slug, .version, .download_link, .last_updated]'
+[
+  "Secure Custom Fields",
+  "advanced-custom-fields",
+  "6.3.6.2",
+  "https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.2.zip",
+  "2024-10-12 5:47pm GMT"
+]
+```
+
+My current local mirrored ACF `6.3.6.1` version listing which needs updating:
+
+```json
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.name, .slug, .version, .download_link, .last_updated]'
+[
+  "Advanced Custom Fields (ACF)",
+  "advanced-custom-fields",
+  "6.3.6.1",
+  "https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.6.1.zip",
+  "2024-10-07 5:58pm GMT"
+]
+```
+
+My local mirror also keeps a backup history of WordPress plugin's JSON metadata just in case though haven't made use of it other than for backup purposes right now. Eventually my plugin mirror system will support mirroring for plugins outside of `wordpress.org`.
+
+![Local mirror plugin JSON metadata backups](/screenshots/wp-plugin-json-metadata-backup-01.png)
 
 ## Examples
 
