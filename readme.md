@@ -32,6 +32,7 @@
    * [Cached Plugin](#cached-plugin)
    * [wget download speed test](#wget-download-speed-test)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
+   * [Github Hosted Plugins](#github-hosted-plugins)
    * [Demo WordPress Plugin Install Using Local Mirror](#demo-wordpress-plugin-install-using-local-mirror)
      * [Install using default wordpress.org download source](#install-using-default-wordpress.org-download-source)
      * [Installing from local mirror downloaded plugin zip file](#installing-from-local-mirror-downloaded-plugin-zip-file)
@@ -726,7 +727,7 @@ Activity detected in the last 72 hours. Compare with 24-hour and 48-hour metrics
 The WordPress Plugin Mirror Downloader operates through a series of coordinated steps involving the bash script, Cloudflare Worker, and R2 storage. Here's a detailed breakdown of the process:
 
 ### 1. **Plugin Identification**:
-- The bash script reads a list of desired plugins from a configuration file or command-line arguments. It can also be set to read from a WordPress installation's plugin directory the list of WordPress plugins to download.
+- The bash script reads a list of desired plugins from a configuration file or command-line arguments. It can also be set to read from a WordPress installation's plugin directory the list of WordPress plugins to download. It also reads and detects [Github hosted Wordpress plugins and mirrors](#github-hosted-plugins) then appropriately.
 - It compares this list against a local cache of installed plugins and their versions.
 - The script identifies plugins that need to be downloaded or updated based on version discrepancies.
 
@@ -2369,6 +2370,172 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.js
     "turl": "https://profiles.wordpress.org/turl/"
   }
 }
+```
+
+### Github Hosted Plugins
+
+With the possibility of some WordPress plugins being hosted on Github repositories instead of `wordpress.org`, I need to update my mirror system to support this. 
+
+This is first version attempt at supporting this via a config file `/home/wordpress-plugins/github_plugins.txt` which lists each Github hosted plugins details for `plugin-slug:github-username/repo-name`. So for the example of Advanced Custom Fields hosted at https://github.com/AdvancedCustomFields/acf, it would end up something the below example where I am only defining a small sample of WordPress plugins to download and mirror. Note the Github hosted WordPress plugin checksum JSON file doesn't exist write now. Working on handling that next - ideally would be nice if WordPress plugins hosted on Github would have a publicly available plugin JSON metadata and checksum file JSON file equivalents as to what `wordpress.org` hosts. So folks like myself can point to the WordPress plugin's Github hosted JSON metadata and checksum file JSON files.
+
+Defined in `get_plugins_r2.sh` specific plugins to test mirror downloading.
+
+```bash
+ADDITIONAL_PLUGINS=(
+    "advanced-custom-fields"
+    "autoptimize"
+    "better-search-replace"
+    "classic-editor"
+)
+```
+
+Example run with `-d` debug mode and single threaded `-p 1`:
+
+```bash
+touch /home/wordpress-plugins/github_plugins.txt
+
+echo 'advanced-custom-fields:AdvancedCustomFields/acf' >> /home/wordpress-plugins/github_plugins.txt
+
+time ./get_plugins_r2.sh -p 1 -d
+
+Processing plugin: advanced-custom-fields
+[DEBUG] Processing GitHub-hosted plugin: advanced-custom-fields
+[DEBUG] Updated JSON metadata for GitHub plugin advanced-custom-fields version 6.3.8 based on WordPress.org data
+[DEBUG] Latest version for advanced-custom-fields: 6.3.8
+[DEBUG] API download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
+[DEBUG] Stored version for advanced-custom-fields: 6.3.8
+[DEBUG] API-provided download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
+[DEBUG] Constructed download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.8.zip
+[DEBUG] Using API-provided download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
+[DEBUG] Downloading advanced-custom-fields version 6.3.8 through Cloudflare Worker
+[DEBUG] Successfully downloaded advanced-custom-fields version 6.3.8 from WordPress
+[DEBUG] R2 bucket saving for plugin zip occurred
+Successfully processed advanced-custom-fields.
+Time taken for advanced-custom-fields: 0.2554 seconds
+[DEBUG] Saving plugin json metadata for advanced-custom-fields version 6.3.8
+[DEBUG] json metadata for advanced-custom-fields version 6.3.8 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for advanced-custom-fields.
+[DEBUG] Fetching and saving checksums for advanced-custom-fields version 6.3.8
+[DEBUG] Sending request to Worker for checksums: ?plugin=advanced-custom-fields&version=6.3.8&type=checksums
+[DEBUG] Received response with status code: 500
+Error: Failed to save checksums for advanced-custom-fields version 6.3.8 (HTTP status: 500)
+[DEBUG] Error response: Failed to fetch plugin checksums from WordPress
+[DEBUG] Failed to fetch and save checksums for advanced-custom-fields.
+Processing plugin: autoptimize
+[DEBUG] Processing WordPress.org plugin: autoptimize
+[DEBUG] Checking latest version and download link for autoptimize
+[DEBUG] Latest version for autoptimize: 3.1.12
+[DEBUG] API download link for autoptimize: https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip
+[DEBUG] Stored version for autoptimize: 3.1.12
+autoptimize is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] Saving plugin json metadata for autoptimize version 3.1.12
+[DEBUG] json metadata for autoptimize version 3.1.12 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for autoptimize.
+[DEBUG] Fetching and saving checksums for autoptimize version 3.1.12
+[DEBUG] Sending request to Worker for checksums: ?plugin=autoptimize&version=3.1.12&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for autoptimize version 3.1.12 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for autoptimize.
+Processing plugin: better-search-replace
+[DEBUG] Processing WordPress.org plugin: better-search-replace
+[DEBUG] Checking latest version and download link for better-search-replace
+[DEBUG] Latest version for better-search-replace: 1.4.7
+[DEBUG] API download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.zip
+[DEBUG] Stored version for better-search-replace: 1.4.7
+better-search-replace is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] Saving plugin json metadata for better-search-replace version 1.4.7
+[DEBUG] json metadata for better-search-replace version 1.4.7 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for better-search-replace.
+[DEBUG] Fetching and saving checksums for better-search-replace version 1.4.7
+[DEBUG] Sending request to Worker for checksums: ?plugin=better-search-replace&version=1.4.7&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for better-search-replace version 1.4.7 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for better-search-replace.
+Processing plugin: classic-editor
+[DEBUG] Processing WordPress.org plugin: classic-editor
+[DEBUG] Checking latest version and download link for classic-editor
+[DEBUG] Latest version for classic-editor: 1.6.5
+[DEBUG] API download link for classic-editor: https://downloads.wordpress.org/plugin/classic-editor.1.6.5.zip
+[DEBUG] Stored version for classic-editor: 1.6.5
+classic-editor is up-to-date and exists in mirror directory. Skipping download...
+[DEBUG] Saving plugin json metadata for classic-editor version 1.6.5
+[DEBUG] json metadata for classic-editor version 1.6.5 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for classic-editor.
+[DEBUG] Fetching and saving checksums for classic-editor version 1.6.5
+[DEBUG] Sending request to Worker for checksums: ?plugin=classic-editor&version=1.6.5&type=checksums
+[DEBUG] Received response with status code: 200
+[DEBUG] Response source: 
+[DEBUG] Checksums for classic-editor version 1.6.5 saved (checksums file already exists)
+[DEBUG] Successfully fetched and saved checksums for classic-editor.
+Plugin download process completed.
+
+real    0m2.379s
+user    0m0.975s
+sys     0m0.104s
+```
+
+Local downloaded WordPress plugin zip files are as follows. Notice I had previous downloaded `wordpress.org` taken over `advanced-custom-fields.6.3.6.2.zip` in a previous run. But the newer ACF hosted on Github version is now downloaded instead `advanced-custom-fields.6.3.8.zip`.
+
+```bash
+ls -lAhrt /home/nginx/domains/plugins.domain.com/public
+total 13M
+-rw-r--r-- 1 root nginx 6.0M Oct 14 15:33 advanced-custom-fields.6.3.6.2.zip
+-rw-r--r-- 1 root nginx 259K Oct 14 15:33 autoptimize.3.1.12.zip
+-rw-r--r-- 1 root nginx 155K Oct 14 15:33 better-search-replace.1.4.7.zip
+-rw-r--r-- 1 root nginx  20K Oct 14 15:33 classic-editor.1.6.5.zip
+-rw-r--r-- 1 root nginx 6.1M Oct 14 17:16 advanced-custom-fields.6.3.8.zip
+```
+
+Querying the locally mirrored Advanced Custom Fields's JSON metadata file shows the `download_link` pointing to Github hosted zip file and also `download_link_mirror` hosted zip file for my local mirrored version.
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.download_link, .download_link_mirror]'
+[
+  "https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip",
+  "https://downloads.mycloudflareproxy_domain.com/advanced-custom-fields.6.3.8.zip"
+]
+```
+
+The extended version output for locally mirrored Advanced Custom Fields's JSON metadata file where:
+
+- `name` updated to Github hosted release name = `Advanced Custom Fields v6.3.8`
+- `slug` still the same
+- `version` updated to Github hosted release version = `6.3.8`
+- `download_link` updated to Github hosted plugin zip file download link
+- `download_link_mirror` added my local mirror plugin zip file download link.
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "Advanced Custom Fields v6.3.8",
+  "advanced-custom-fields",
+  "6.3.8",
+  "https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip",
+  "https://downloads.mycloudflareproxy_domain.com/advanced-custom-fields.6.3.8.zip"
+]
+```
+
+HTTP response headers from local mirror plugin zip file download link
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/advanced-custom-fields.6.3.8.zip
+HTTP/2 200 
+date: Mon, 14 Oct 2024 23:12:29 GMT
+content-type: application/zip
+content-length: 6310074
+etag: "a713def0f24445cba251da9f58847bff"
+last-modified: Mon, 14 Oct 2024 22:54:14 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 3
+expires: Mon, 14 Oct 2024 23:17:29 GMT
+cache-control: public, max-age=300
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d2b4127fe436bc8-DFW
+alt-svc: h3=":443"; ma=86400
 ```
 
 ### Demo WordPress Plugin Install Using Local Mirror
