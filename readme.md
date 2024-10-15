@@ -3589,7 +3589,7 @@ DNS,Connect,SSL,Wait,TTFB,Total Time
 
 ### WordPress Themes Mirrors
 
-Running the full WordPress themes mirroring resulted in a total of 13,046 WordPress themes occupying a total 17.16GB disk size in Cloudflare R2 S3 object storage bucket. There are currently 27,494 WordPress themes listed in Wordpress themes SVN repository at https://themes.svn.wordpress.org/ so 14,448 WordPress themes in SVN repo that are not open/published on `wordpress.org`. 
+Running the full WordPress themes mirroring resulted in a total of 13,021 WordPress themes occupying a total 17.16GB disk size in Cloudflare R2 S3 object storage bucket. There are currently 27,494 WordPress themes listed in Wordpress themes SVN repository at https://themes.svn.wordpress.org/ so 14,448 WordPress themes in SVN repo that are not open/published on `wordpress.org`. 
 
 Local WordPress themes download size and counts:
 
@@ -3601,7 +3601,7 @@ du -s /home/nginx/domains/themes.domain.com/public/
 18022760        /home/nginx/domains/themes.domain.com/public/
 
 ls -lAh /home/nginx/domains/themes.domain.com/public | wc -l
-13046
+13021
 ```
 
 WordPress Themes in Cloudflare R2 S3 Bucket viewed via S3Browser Windows app:
