@@ -2377,7 +2377,9 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.js
 
 With the possibility of some WordPress plugins being hosted on Github repositories instead of `wordpress.org`, I need to update my mirror system to support this. 
 
-This is first version attempt at supporting this via a config file `/home/wordpress-plugins/github_plugins.txt` which lists each Github hosted plugins details for `plugin-slug:github-username/repo-name`. So for the example of Advanced Custom Fields hosted at https://github.com/AdvancedCustomFields/acf, it would end up something the below example where I am only defining a small sample of WordPress plugins to download and mirror. Note the Github hosted WordPress plugin checksum JSON file doesn't exist write now. Working on handling that next - ideally would be nice if WordPress plugins hosted on Github would have a publicly available plugin JSON metadata and checksum file JSON file equivalents as to what `wordpress.org` hosts. So folks like myself can point to the WordPress plugin's Github hosted JSON metadata and checksum file JSON files.
+This is first version attempt at supporting this via a config file `/home/wordpress-plugins/github_plugins.txt` which lists each Github hosted plugins details for `plugin-slug:github-username/repo-name`. So for the example of WPEngine's Advanced Custom Fields WordPress plugin hosted at https://github.com/AdvancedCustomFields/acf, it would end up something the below example where I am only defining a small sample of WordPress plugins to download and mirror. Note the Github hosted WordPress plugin checksum JSON file doesn't exist write now. Working on handling that next - ideally would be nice if WordPress plugins hosted on Github would have a publicly available plugin JSON metadata and checksum file JSON file equivalents as to what `wordpress.org` hosts. So folks like myself can point to the WordPress plugin's Github hosted JSON metadata and checksum file JSON files.
+
+Apparently once you update to WPEngine's latest plugins, future plugin updates come from their servers https://wpengine.com/support/installing-and-updating-free-wp-engine-plugins-and-themes/. As far as I know, Nitropack doesn't have Github hosted url, so haven't catered for it yet.
 
 Defined in `get_plugins_r2.sh` specific plugins to test mirror downloading.
 
@@ -2386,6 +2388,9 @@ ADDITIONAL_PLUGINS=(
     "advanced-custom-fields"
     "autoptimize"
     "better-search-replace"
+    "wp-migrate-db"
+    "wp-amazon-s3-and-cloudfront"
+    "wp-offload-ses-lite"
     "classic-editor"
 )
 ```
@@ -2396,6 +2401,10 @@ Example run with `-d` debug mode and single threaded `-p 1`:
 touch /home/wordpress-plugins/github_plugins.txt
 
 echo 'advanced-custom-fields:AdvancedCustomFields/acf' >> /home/wordpress-plugins/github_plugins.txt
+echo 'wp-migrate-db:deliciousbrains/wp-migrate-db' >> /home/wordpress-plugins/github_plugins.txt
+echo 'wp-amazon-s3-and-cloudfront:deliciousbrains/wp-amazon-s3-and-cloudfront' >> /home/wordpress-plugins/github_plugins.txt
+echo 'wp-offload-ses-lite:deliciousbrains/wp-offload-ses-lite' >> /home/wordpress-plugins/github_plugins.txt
+echo 'better-search-replace:deliciousbrains/better-search-replace' >> /home/wordpress-plugins/github_plugins.txt
 
 time ./get_plugins_r2.sh -p 1 -d
 
@@ -2405,14 +2414,7 @@ Processing plugin: advanced-custom-fields
 [DEBUG] Latest version for advanced-custom-fields: 6.3.8
 [DEBUG] API download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
 [DEBUG] Stored version for advanced-custom-fields: 6.3.8
-[DEBUG] API-provided download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
-[DEBUG] Constructed download link for advanced-custom-fields: https://downloads.wordpress.org/plugin/advanced-custom-fields.6.3.8.zip
-[DEBUG] Using API-provided download link for advanced-custom-fields: https://github.com/AdvancedCustomFields/acf/releases/download/6.3.8/advanced-custom-fields-6.3.8.zip
-[DEBUG] Downloading advanced-custom-fields version 6.3.8 through Cloudflare Worker
-[DEBUG] Successfully downloaded advanced-custom-fields version 6.3.8 from WordPress
-[DEBUG] R2 bucket saving for plugin zip occurred
-Successfully processed advanced-custom-fields.
-Time taken for advanced-custom-fields: 0.2554 seconds
+advanced-custom-fields is up-to-date and exists in mirror directory. Skipping download...
 [DEBUG] Saving plugin json metadata for advanced-custom-fields version 6.3.8
 [DEBUG] json metadata for advanced-custom-fields version 6.3.8 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for advanced-custom-fields.
@@ -2439,21 +2441,21 @@ autoptimize is up-to-date and exists in mirror directory. Skipping download...
 [DEBUG] Checksums for autoptimize version 3.1.12 saved (checksums file already exists)
 [DEBUG] Successfully fetched and saved checksums for autoptimize.
 Processing plugin: better-search-replace
-[DEBUG] Processing WordPress.org plugin: better-search-replace
-[DEBUG] Checking latest version and download link for better-search-replace
-[DEBUG] Latest version for better-search-replace: 1.4.7
-[DEBUG] API download link for better-search-replace: https://downloads.wordpress.org/plugin/better-search-replace.zip
-[DEBUG] Stored version for better-search-replace: 1.4.7
+[DEBUG] Processing GitHub-hosted plugin: better-search-replace
+[DEBUG] Updated JSON metadata for GitHub plugin better-search-replace version 1.4.9 based on WordPress.org data
+[DEBUG] Latest version for better-search-replace: 1.4.9
+[DEBUG] API download link for better-search-replace: https://github.com/deliciousbrains/better-search-replace/releases/download/1.4.9/better-search-replace.1.4.9.zip
+[DEBUG] Stored version for better-search-replace: 1.4.9
 better-search-replace is up-to-date and exists in mirror directory. Skipping download...
-[DEBUG] Saving plugin json metadata for better-search-replace version 1.4.7
-[DEBUG] json metadata for better-search-replace version 1.4.7 saved (json metadata file already exists)
+[DEBUG] Saving plugin json metadata for better-search-replace version 1.4.9
+[DEBUG] json metadata for better-search-replace version 1.4.9 saved (json metadata file already exists)
 [DEBUG] Successfully saved json metadata for better-search-replace.
-[DEBUG] Fetching and saving checksums for better-search-replace version 1.4.7
-[DEBUG] Sending request to Worker for checksums: ?plugin=better-search-replace&version=1.4.7&type=checksums
-[DEBUG] Received response with status code: 200
-[DEBUG] Response source: 
-[DEBUG] Checksums for better-search-replace version 1.4.7 saved (checksums file already exists)
-[DEBUG] Successfully fetched and saved checksums for better-search-replace.
+[DEBUG] Fetching and saving checksums for better-search-replace version 1.4.9
+[DEBUG] Sending request to Worker for checksums: ?plugin=better-search-replace&version=1.4.9&type=checksums
+[DEBUG] Received response with status code: 500
+Error: Failed to save checksums for better-search-replace version 1.4.9 (HTTP status: 500)
+[DEBUG] Error response: Failed to fetch plugin checksums from WordPress
+[DEBUG] Failed to fetch and save checksums for better-search-replace.
 Processing plugin: classic-editor
 [DEBUG] Processing WordPress.org plugin: classic-editor
 [DEBUG] Checking latest version and download link for classic-editor
@@ -2470,26 +2472,97 @@ classic-editor is up-to-date and exists in mirror directory. Skipping download..
 [DEBUG] Response source: 
 [DEBUG] Checksums for classic-editor version 1.6.5 saved (checksums file already exists)
 [DEBUG] Successfully fetched and saved checksums for classic-editor.
+Processing plugin: wp-amazon-s3-and-cloudfront
+[DEBUG] Processing GitHub-hosted plugin: wp-amazon-s3-and-cloudfront
+[DEBUG] Generated basic JSON metadata for GitHub plugin wp-amazon-s3-and-cloudfront version 3.2.9
+[DEBUG] Latest version for wp-amazon-s3-and-cloudfront: 3.2.9
+[DEBUG] API download link for wp-amazon-s3-and-cloudfront: https://github.com/deliciousbrains/wp-amazon-s3-and-cloudfront/releases/download/3.2.9/amazon-s3-and-cloudfront.3.2.9.zip
+[DEBUG] Stored version for wp-amazon-s3-and-cloudfront: 
+[DEBUG] API-provided download link for wp-amazon-s3-and-cloudfront: https://github.com/deliciousbrains/wp-amazon-s3-and-cloudfront/releases/download/3.2.9/amazon-s3-and-cloudfront.3.2.9.zip
+[DEBUG] Constructed download link for wp-amazon-s3-and-cloudfront: https://downloads.wordpress.org/plugin/wp-amazon-s3-and-cloudfront.3.2.9.zip
+[DEBUG] Using API-provided download link for wp-amazon-s3-and-cloudfront: https://github.com/deliciousbrains/wp-amazon-s3-and-cloudfront/releases/download/3.2.9/amazon-s3-and-cloudfront.3.2.9.zip
+[DEBUG] Downloading wp-amazon-s3-and-cloudfront version 3.2.9 through Cloudflare Worker
+[DEBUG] Skipped download for wp-amazon-s3-and-cloudfront 3.2.9 zip (already exists locally)
+Successfully processed wp-amazon-s3-and-cloudfront.
+Time taken for wp-amazon-s3-and-cloudfront: 1.1201 seconds
+[DEBUG] Saving plugin json metadata for wp-amazon-s3-and-cloudfront version 3.2.9
+[DEBUG] json metadata for wp-amazon-s3-and-cloudfront version 3.2.9 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for wp-amazon-s3-and-cloudfront.
+[DEBUG] Fetching and saving checksums for wp-amazon-s3-and-cloudfront version 3.2.9
+[DEBUG] Sending request to Worker for checksums: ?plugin=wp-amazon-s3-and-cloudfront&version=3.2.9&type=checksums
+[DEBUG] Received response with status code: 500
+Error: Failed to save checksums for wp-amazon-s3-and-cloudfront version 3.2.9 (HTTP status: 500)
+[DEBUG] Error response: Failed to fetch plugin checksums from WordPress
+[DEBUG] Failed to fetch and save checksums for wp-amazon-s3-and-cloudfront.
+Processing plugin: wp-migrate-db
+[DEBUG] Processing GitHub-hosted plugin: wp-migrate-db
+[DEBUG] Updated JSON metadata for GitHub plugin wp-migrate-db version 2.7.0 based on WordPress.org data
+[DEBUG] Latest version for wp-migrate-db: 2.7.0
+[DEBUG] API download link for wp-migrate-db: https://github.com/deliciousbrains/wp-migrate-db/releases/download/2.7.0/wp-migrate-db.2.7.0.zip
+[DEBUG] Stored version for wp-migrate-db: 
+[DEBUG] API-provided download link for wp-migrate-db: https://github.com/deliciousbrains/wp-migrate-db/releases/download/2.7.0/wp-migrate-db.2.7.0.zip
+[DEBUG] Constructed download link for wp-migrate-db: https://downloads.wordpress.org/plugin/wp-migrate-db.2.7.0.zip
+[DEBUG] Using API-provided download link for wp-migrate-db: https://github.com/deliciousbrains/wp-migrate-db/releases/download/2.7.0/wp-migrate-db.2.7.0.zip
+[DEBUG] Downloading wp-migrate-db version 2.7.0 through Cloudflare Worker
+[DEBUG] Skipped download for wp-migrate-db 2.7.0 zip (already exists locally)
+Successfully processed wp-migrate-db.
+Time taken for wp-migrate-db: 1.1863 seconds
+[DEBUG] Saving plugin json metadata for wp-migrate-db version 2.7.0
+[DEBUG] json metadata for wp-migrate-db version 2.7.0 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for wp-migrate-db.
+[DEBUG] Fetching and saving checksums for wp-migrate-db version 2.7.0
+[DEBUG] Sending request to Worker for checksums: ?plugin=wp-migrate-db&version=2.7.0&type=checksums
+[DEBUG] Received response with status code: 500
+Error: Failed to save checksums for wp-migrate-db version 2.7.0 (HTTP status: 500)
+[DEBUG] Error response: Failed to fetch plugin checksums from WordPress
+[DEBUG] Failed to fetch and save checksums for wp-migrate-db.
+Processing plugin: wp-offload-ses-lite
+[DEBUG] Processing GitHub-hosted plugin: wp-offload-ses-lite
+[DEBUG] Generated basic JSON metadata for GitHub plugin wp-offload-ses-lite version 1.7.1
+[DEBUG] Latest version for wp-offload-ses-lite: 1.7.1
+[DEBUG] API download link for wp-offload-ses-lite: https://github.com/deliciousbrains/wp-offload-ses-lite/releases/download/1.7.1/wp-ses.1.7.1.zip
+[DEBUG] Stored version for wp-offload-ses-lite: 
+[DEBUG] API-provided download link for wp-offload-ses-lite: https://github.com/deliciousbrains/wp-offload-ses-lite/releases/download/1.7.1/wp-ses.1.7.1.zip
+[DEBUG] Constructed download link for wp-offload-ses-lite: https://downloads.wordpress.org/plugin/wp-offload-ses-lite.1.7.1.zip
+[DEBUG] Using API-provided download link for wp-offload-ses-lite: https://github.com/deliciousbrains/wp-offload-ses-lite/releases/download/1.7.1/wp-ses.1.7.1.zip
+[DEBUG] Downloading wp-offload-ses-lite version 1.7.1 through Cloudflare Worker
+[DEBUG] Skipped download for wp-offload-ses-lite 1.7.1 zip (already exists locally)
+Successfully processed wp-offload-ses-lite.
+Time taken for wp-offload-ses-lite: 1.3354 seconds
+[DEBUG] Saving plugin json metadata for wp-offload-ses-lite version 1.7.1
+[DEBUG] json metadata for wp-offload-ses-lite version 1.7.1 saved (json metadata file already exists)
+[DEBUG] Successfully saved json metadata for wp-offload-ses-lite.
+[DEBUG] Fetching and saving checksums for wp-offload-ses-lite version 1.7.1
+[DEBUG] Sending request to Worker for checksums: ?plugin=wp-offload-ses-lite&version=1.7.1&type=checksums
+[DEBUG] Received response with status code: 500
+Error: Failed to save checksums for wp-offload-ses-lite version 1.7.1 (HTTP status: 500)
+[DEBUG] Error response: Failed to fetch plugin checksums from WordPress
+[DEBUG] Failed to fetch and save checksums for wp-offload-ses-lite.
 Plugin download process completed.
 
-real    0m2.379s
-user    0m0.975s
-sys     0m0.104s
+real    0m28.686s
+user    0m2.005s
+sys     0m0.233s
 ```
 
-Local downloaded WordPress plugin zip files are as follows. Notice I had previous downloaded `wordpress.org` taken over `advanced-custom-fields.6.3.6.2.zip` in a previous run. But the newer ACF hosted on Github version is now downloaded instead `advanced-custom-fields.6.3.8.zip`.
+Local downloaded WordPress plugin zip files are as follows with the newer ACF and other Github hosted version now downloaded. Notice `better-search-replace` 1.4.7 came from `wordpress.org` while 1.4.9 is from Githb hosted version now.
 
 ```bash
 ls -lAhrt /home/nginx/domains/plugins.domain.com/public
-total 13M
--rw-r--r-- 1 root nginx 6.0M Oct 14 15:33 advanced-custom-fields.6.3.6.2.zip
--rw-r--r-- 1 root nginx 259K Oct 14 15:33 autoptimize.3.1.12.zip
--rw-r--r-- 1 root nginx 155K Oct 14 15:33 better-search-replace.1.4.7.zip
--rw-r--r-- 1 root nginx  20K Oct 14 15:33 classic-editor.1.6.5.zip
--rw-r--r-- 1 root nginx 6.1M Oct 14 17:16 advanced-custom-fields.6.3.8.zip
+total 14M
+-rw-r--r-- 1 root nginx 6.1M Oct 14 17:54 advanced-custom-fields.6.3.8.zip
+-rw-r--r-- 1 root nginx 259K Oct 14 17:54 autoptimize.3.1.12.zip
+-rw-r--r-- 1 root nginx 155K Oct 14 17:54 better-search-replace.1.4.7.zip
+-rw-r--r-- 1 root nginx  20K Oct 14 17:54 classic-editor.1.6.5.zip
+-rw-r--r-- 1 root nginx 162K Oct 15 07:55 better-search-replace.1.4.9.zip
+-rw-r--r-- 1 root nginx 3.5M Oct 15 07:58 wp-amazon-s3-and-cloudfront.3.2.9.zip
+-rw-r--r-- 1 root nginx 1.6M Oct 15 07:58 wp-migrate-db.2.7.0.zip
+-rw-r--r-- 1 root nginx 2.2M Oct 15 07:58 wp-offload-ses-lite.1.7.1.zip
 ```
 
-Querying the locally mirrored Advanced Custom Fields's JSON metadata file shows the `download_link` pointing to Github hosted zip file and also `download_link_mirror` hosted zip file for my local mirrored version.
+Querying the locally mirrored Advanced Custom Fields's and other WordPress plugin's JSON metadata file shows the `download_link` pointing to Github hosted zip file and also `download_link_mirror` hosted zip file for my local mirrored version.
+
+`advanced-custom-fields`
 
 ```bash
 curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.download_link, .download_link_mirror]'
@@ -2499,13 +2572,15 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custo
 ]
 ```
 
-The extended version output for locally mirrored Advanced Custom Fields's JSON metadata file where:
+The extended version output for locally mirrored Advanced Custom Fields and other plugin's JSON metadata file where:
 
 - `name` updated to Github hosted release name = `Advanced Custom Fields v6.3.8`
 - `slug` still the same
 - `version` updated to Github hosted release version = `6.3.8`
 - `download_link` updated to Github hosted plugin zip file download link
 - `download_link_mirror` added my local mirror plugin zip file download link.
+
+`advanced-custom-fields`
 
 ```bash
 curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custom-fields.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
@@ -2518,7 +2593,72 @@ curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/advanced-custo
 ]
 ```
 
-HTTP response headers from local mirror plugin zip file download link
+`autoptimize`
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/autoptimize.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "Autoptimize",
+  "autoptimize",
+  "3.1.12",
+  "https://downloads.wordpress.org/plugin/autoptimize.3.1.12.zip",
+  "https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip"
+]
+```
+
+`better-search-replace`
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/better-search-replace.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "1.4.9",
+  "better-search-replace",
+  "1.4.9",
+  "https://github.com/deliciousbrains/better-search-replace/releases/download/1.4.9/better-search-replace.1.4.9.zip",
+  "https://downloads.mycloudflareproxy_domain.com/better-search-replace.1.4.9.zip"
+]
+```
+
+`wp-amazon-s3-and-cloudfront`
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/wp-amazon-s3-and-cloudfront.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "3.2.9",
+  "wp-amazon-s3-and-cloudfront",
+  "3.2.9",
+  "https://github.com/deliciousbrains/wp-amazon-s3-and-cloudfront/releases/download/3.2.9/amazon-s3-and-cloudfront.3.2.9.zip",
+  "https://downloads.mycloudflareproxy_domain.com/wp-amazon-s3-and-cloudfront.3.2.9.zip"
+]
+```
+
+`wp-migrate-db`
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/wp-migrate-db.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "2.7.0",
+  "wp-migrate-db",
+  "2.7.0",
+  "https://github.com/deliciousbrains/wp-migrate-db/releases/download/2.7.0/wp-migrate-db.2.7.0.zip",
+  "https://downloads.mycloudflareproxy_domain.com/wp-migrate-db.2.7.0.zip"
+]
+```
+
+`wp-offload-ses-lite`
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/wp-offload-ses-lite.json | jq -r '[.name, .slug, .version, .download_link, .download_link_mirror]'
+[
+  "1.7.1",
+  "wp-offload-ses-lite",
+  "1.7.1",
+  "https://github.com/deliciousbrains/wp-offload-ses-lite/releases/download/1.7.1/wp-ses.1.7.1.zip",
+  "https://downloads.mycloudflareproxy_domain.com/wp-offload-ses-lite.1.7.1.zip"
+]
+```
+
+HTTP response headers from local mirror plugin's zip file download links that are saved in Cloudflare R2 S3 object storage:
 
 ```bash
 curl -I https://downloads.mycloudflareproxy_domain.com/advanced-custom-fields.6.3.8.zip
@@ -2536,6 +2676,98 @@ cache-control: public, max-age=300
 accept-ranges: bytes
 server: cloudflare
 cf-ray: 8d2b4127fe436bc8-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/autoptimize.3.1.12.zip
+HTTP/2 404 
+date: Tue, 15 Oct 2024 13:05:30 GMT
+content-type: text/html
+content-length: 27150
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 1
+expires: Tue, 15 Oct 2024 13:10:30 GMT
+cache-control: public, max-age=300
+server: cloudflare
+cf-ray: 8d3005686fac0bac-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/better-search-replace.1.4.9.zip
+HTTP/2 200 
+date: Tue, 15 Oct 2024 13:05:57 GMT
+content-type: application/zip
+content-length: 164921
+etag: "d060997bc07adcca4117869b1c56a0b5"
+last-modified: Tue, 15 Oct 2024 12:55:16 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 4
+expires: Tue, 15 Oct 2024 13:10:57 GMT
+cache-control: public, max-age=300
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d30060b0bfc6b57-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/wp-amazon-s3-and-cloudfront.3.2.9.zip
+HTTP/2 200 
+date: Tue, 15 Oct 2024 13:06:25 GMT
+content-type: application/zip
+content-length: 3599584
+etag: "93e33ee77d267364453b32d2a3581ef5"
+last-modified: Tue, 15 Oct 2024 12:58:33 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 5
+expires: Tue, 15 Oct 2024 13:11:25 GMT
+cache-control: public, max-age=300
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d3006beac262e76-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/wp-migrate-db.2.7.0.zip
+HTTP/2 200 
+date: Tue, 15 Oct 2024 13:06:58 GMT
+content-type: application/zip
+content-length: 1612918
+etag: "308587b8b92c656cc065a1c4973cc15a"
+last-modified: Tue, 15 Oct 2024 12:58:39 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 6
+expires: Tue, 15 Oct 2024 13:11:58 GMT
+cache-control: public, max-age=300
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d30078b2983e7e7-DFW
+alt-svc: h3=":443"; ma=86400
+```
+
+```bash
+curl -I https://downloads.mycloudflareproxy_domain.com/wp-offload-ses-lite.1.7.1.zip
+HTTP/2 200 
+date: Tue, 15 Oct 2024 13:07:36 GMT
+content-type: application/zip
+content-length: 2255713
+etag: "a227e9deee787719ec4e126ad01b2d5a"
+last-modified: Tue, 15 Oct 2024 12:58:46 GMT
+vary: Accept-Encoding
+cf-cache-status: HIT
+age: 5
+expires: Tue, 15 Oct 2024 13:12:36 GMT
+cache-control: public, max-age=300
+accept-ranges: bytes
+server: cloudflare
+cf-ray: 8d300876f9b0e96a-DFW
 alt-svc: h3=":443"; ma=86400
 ```
 
