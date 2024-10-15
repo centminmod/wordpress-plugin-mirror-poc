@@ -42,6 +42,7 @@
 5. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
 6. [WordPress Themes Mirror](#wordpress-themes-mirror)
    * [WordPress Themes Cloudflare CDN Benchmarks](#wordpress-themes-cloudflare-cdn-benchmarks)
+   * [WordPress Themes Mirrors](#wordpress-themes-mirrors)
 
 ## Introduction
 
@@ -3586,3 +3587,23 @@ DNS,Connect,SSL,Wait,TTFB,Total Time
 }
 ```
 
+### WordPress Themes Mirrors
+
+Running the full WordPress themes mirroring resulted in a total of 13,046 WordPress themes occupying a total 17.16GB disk size in Cloudflare R2 S3 object storage bucket. There are currently 27,494 WordPress themes listed in Wordpress themes SVN repository at https://themes.svn.wordpress.org/ so 14,448 WordPress themes in SVN repo that are not open/published on `wordpress.org`. 
+
+Local WordPress themes download size and counts:
+
+```bash
+du -sh /home/nginx/domains/themes.domain.com/public/
+18G     /home/nginx/domains/themes.domain.com/public/
+
+du -s /home/nginx/domains/themes.domain.com/public/
+18022760        /home/nginx/domains/themes.domain.com/public/
+
+ls -lAh /home/nginx/domains/themes.domain.com/public | wc -l
+13046
+```
+
+WordPress Themes in Cloudflare R2 S3 Bucket viewed via S3Browser Windows app:
+
+![WordPress Themes in Cloudflare R2 S3 Bucket](/screenshots/allplugins-get_themes_r2_s3browser-listing-themes-01.png)
