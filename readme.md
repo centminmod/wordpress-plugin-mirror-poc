@@ -40,10 +40,12 @@
      * [Installing from remote mirror server's plugin zip file](#installing-from-remote-mirror-server's-plugin-zip-file)
      * [Demo WordPress Installed Plugin Checksum Verification](#demo-wordpress-installed-plugin-checksum-verification)
 4. [Screenshots](#screenshots)
-5. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
-6. [WordPress Themes Mirror](#wordpress-themes-mirror)
+5. [WordPress Themes Mirror](#wordpress-themes-mirror)
    * [WordPress Themes Cloudflare CDN Benchmarks](#wordpress-themes-cloudflare-cdn-benchmarks)
    * [WordPress Themes Mirrors](#wordpress-themes-mirrors)
+     * [WordPress Themes Mirror Screenshots](#wordpress-themes-mirror-screenshots)
+     * [WordPress Themes Mirror Cloudflare R2 S3 Metrics Screenshots](#wordpress-themes-mirror-cloudflare-r2-s3-metrics-screenshots)
+6. [WordPress Secret Keys API Generator](#wordpress-secret-keys-api-generator)
 
 ## Introduction
 
@@ -3151,50 +3153,6 @@ Error: Invalid plugin slug. for plugin 海阔淘宝相关宝贝插件
 Skipping 海阔淘宝相关宝贝插件 due to version fetch error.
 ```
 
-## WordPress Secret Keys API Generator
-
-Not WordPress plugin related, but also setup a separate Cloudflare Worker that replicates (not proxy) the API for secret keys generator for wp-config.php.
-
-Original
-
-* https://api.wordpress.org/secret-key/1.0/
-* https://api.wordpress.org/secret-key/1.1/
-* https://api.wordpress.org/secret-key/1.1/salt/
-
-Cloudflare Worker
-
-* https://api.mycloudflareproxy_domain.com/secret-key/1.0/
-* https://api.mycloudflareproxy_domain.com/secret-key/1.1/
-* https://api.mycloudflareproxy_domain.com/secret-key/1.1/salt/
-
-```bash
-curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.0/
-
-define('SECRET_KEY', '(r&lIZV-.8/@jc?t[>D~xZTPuIq.B2GFF>Mc.-Gu%+yg36YMjyqJe.:4WYo4<~ig');
-```
-
-```bash
-curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.1/
-
-define('AUTH_KEY', 'x+%Hff>o}T^jaNbyh*[S`C&wTOF Ygqk<iY:5hgEXQ$M+/Qe$Nct$A6a7qm>u]R$');
-define('SECURE_AUTH_KEY', '4qpO5+&mC#0fT?sAb2p[D+qw`f<%{w56s4*(8pY`Rd{}<~N*wS6EUGj-?/q@M,B1');
-define('LOGGED_IN_KEY', 'qMj7-!R2B,L>wQN9_/){8l(:1Ur@&m1]/&C=4 G<!|DUC}>ZgKj4H(#/ha[`#7w~');
-define('NONCE_KEY', '7(eOLM[3>8E2)J,torRGm?mhB@EW136oK+UKqh3B-#TiJWE{TA_*lf0+zFcz@X5^');
-```
-
-```bash
-curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.1/salt/
-
-define('AUTH_KEY', 'J0:Lo?H4}F&s(Qj}seebJ`H,R!ntuELcmn2aIx(&sc5GabjGU(h-dp^IQ6MfnKqI');
-define('SECURE_AUTH_KEY', 'ywn%1U3;NySz3jT+m|Y;Xin{+Za7Uh^8][VIVwW,?t!{:nksrC=3|.UFQG^Zs&uA');
-define('LOGGED_IN_KEY', 'm<[y_4sW$Kuc>E$3^/q >2Dg{SV@9L*~a&lW#<_.Rr$5cnz:6j9i;@NYy?C[%WF-');
-define('NONCE_KEY', 'jn$?ao_n+gk+2I?s}Pv13bd}:yr$-1$XtO??4kBvsl5:a6ZylXOn3=NdGx%+*lOp');
-define('AUTH_SALT', 'MA<4uGqc`biF-%d.|@!lKEeB<`V)q0rZn->ZvEAf#s9Ysqg=Wt%>0<@Ar-*TnPS?');
-define('SECURE_AUTH_SALT', 'yW})O/%Q$YAW|1~[Y2?yinMw &U<<VW*_{0,}leIwA~?vaIP_K-~s[iB;=&@YI/7');
-define('LOGGED_IN_SALT', 'gt,yqP|J7pA8yd)~JhSA>[L&p1r$G/H=(9P(CWqR=a([N&h<K~p`5QhzD59rG5uq');
-define('NONCE_SALT', 'X_c%R1Aqaw:.mO^Mr(J}[?ly-dScByC*0v*gafH>C#ptX~{Y?jU?C&C:%)GV;J}~');
-```
-
 ## WordPress Themes Mirror
 
 The above outlines my proof of concept WordPress plugins mirroring. Next stage is to replicate the same mirror system for WordPress themes' zip and JSON metadata files using `get_themes_r2.sh` shell script which talks with Cloudflare Worker `get_themes_r2.js`.
@@ -3870,6 +3828,64 @@ ls -lAh /home/nginx/domains/themes.domain.com/public | wc -l
 13021
 ```
 
+#### WordPress Themes Mirror Screenshots
+
 WordPress Themes in Cloudflare R2 S3 Bucket viewed via S3Browser Windows app:
 
 ![WordPress Themes in Cloudflare R2 S3 Bucket](/screenshots/allplugins-get_themes_r2_s3browser-listing-themes-01.png)
+
+Here's the Cloudflare R2 S3 bucket's metrics after the full initial Wordpress themes mirroring and saving to Cloudflare R2 S3 bucket. This full mirror initial session was ran in single threaded mode to see how long it takes. As scripts support parallel threads mode, will see how fast it is in future. I did wait a few days after the mirror run to grab these metrics so had to expand the metric duration to the past week.
+
+#### WordPress Themes Mirror Cloudflare R2 S3 Metrics Screenshots
+
+For WordPress themes mirror R2 S3 bucket reporting at 18.43GB in size with 12.99K Class A writes and 13.24K Class B reads.
+
+![WordPress Themes in Cloudflare R2 S3 Bucket metrics](/screenshots/cf-r2-themes-dashboard-01.png)
+
+![WordPress Themes in Cloudflare R2 S3 Bucket metrics](/screenshots/cf-r2-themes-dashboard-02.png)
+
+![WordPress Themes in Cloudflare R2 S3 Bucket metrics](/screenshots/cf-r2-themes-dashboard-03.png)
+
+## WordPress Secret Keys API Generator
+
+Not WordPress plugin related, but also setup a separate Cloudflare Worker that replicates (not proxy) the API for secret keys generator for wp-config.php.
+
+Original
+
+* https://api.wordpress.org/secret-key/1.0/
+* https://api.wordpress.org/secret-key/1.1/
+* https://api.wordpress.org/secret-key/1.1/salt/
+
+Cloudflare Worker
+
+* https://api.mycloudflareproxy_domain.com/secret-key/1.0/
+* https://api.mycloudflareproxy_domain.com/secret-key/1.1/
+* https://api.mycloudflareproxy_domain.com/secret-key/1.1/salt/
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.0/
+
+define('SECRET_KEY', '(r&lIZV-.8/@jc?t[>D~xZTPuIq.B2GFF>Mc.-Gu%+yg36YMjyqJe.:4WYo4<~ig');
+```
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.1/
+
+define('AUTH_KEY', 'x+%Hff>o}T^jaNbyh*[S`C&wTOF Ygqk<iY:5hgEXQ$M+/Qe$Nct$A6a7qm>u]R$');
+define('SECURE_AUTH_KEY', '4qpO5+&mC#0fT?sAb2p[D+qw`f<%{w56s4*(8pY`Rd{}<~N*wS6EUGj-?/q@M,B1');
+define('LOGGED_IN_KEY', 'qMj7-!R2B,L>wQN9_/){8l(:1Ur@&m1]/&C=4 G<!|DUC}>ZgKj4H(#/ha[`#7w~');
+define('NONCE_KEY', '7(eOLM[3>8E2)J,torRGm?mhB@EW136oK+UKqh3B-#TiJWE{TA_*lf0+zFcz@X5^');
+```
+
+```bash
+curl -s https://api.mycloudflareproxy_domain.com/secret-key/1.1/salt/
+
+define('AUTH_KEY', 'J0:Lo?H4}F&s(Qj}seebJ`H,R!ntuELcmn2aIx(&sc5GabjGU(h-dp^IQ6MfnKqI');
+define('SECURE_AUTH_KEY', 'ywn%1U3;NySz3jT+m|Y;Xin{+Za7Uh^8][VIVwW,?t!{:nksrC=3|.UFQG^Zs&uA');
+define('LOGGED_IN_KEY', 'm<[y_4sW$Kuc>E$3^/q >2Dg{SV@9L*~a&lW#<_.Rr$5cnz:6j9i;@NYy?C[%WF-');
+define('NONCE_KEY', 'jn$?ao_n+gk+2I?s}Pv13bd}:yr$-1$XtO??4kBvsl5:a6ZylXOn3=NdGx%+*lOp');
+define('AUTH_SALT', 'MA<4uGqc`biF-%d.|@!lKEeB<`V)q0rZn->ZvEAf#s9Ysqg=Wt%>0<@Ar-*TnPS?');
+define('SECURE_AUTH_SALT', 'yW})O/%Q$YAW|1~[Y2?yinMw &U<<VW*_{0,}leIwA~?vaIP_K-~s[iB;=&@YI/7');
+define('LOGGED_IN_SALT', 'gt,yqP|J7pA8yd)~JhSA>[L&p1r$G/H=(9P(CWqR=a([N&h<K~p`5QhzD59rG5uq');
+define('NONCE_SALT', 'X_c%R1Aqaw:.mO^Mr(J}[?ly-dScByC*0v*gafH>C#ptX~{Y?jU?C&C:%)GV;J}~');
+```
