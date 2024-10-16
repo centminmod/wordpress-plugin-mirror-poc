@@ -39,7 +39,7 @@
      * [Installing from local mirror downloaded plugin zip file](#installing-from-local-mirror-downloaded-plugin-zip-file)
      * [Installing from remote mirror server's plugin zip file](#installing-from-remote-mirror-server's-plugin-zip-file)
      * [Demo WordPress Installed Plugin Checksum Verification](#demo-wordpress-installed-plugin-checksum-verification)
-4. [Screenshots](#screenshots)
+4. [Plugin Mirror Screenshots](#plugin-mirror-screenshots)
 5. [WordPress Themes Mirror](#wordpress-themes-mirror)
    * [WordPress Themes Cloudflare CDN Benchmarks](#wordpress-themes-cloudflare-cdn-benchmarks)
    * [WordPress Themes Mirrors](#wordpress-themes-mirrors)
@@ -3126,7 +3126,7 @@ ver=$(curl -s https://api.mycloudflareproxy_domain.com/plugins/info/1.0/classic-
 Checksum verification: OK
 ```
 
-## Screenshots
+## Plugin Mirror Screenshots
 
 Using Github Workflow to automate the script.
 
