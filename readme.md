@@ -2391,6 +2391,28 @@ As far as I know, Nitropack doesn't have Github hosted url, so haven't catered f
 
 It would be nice if WordPress plugins hosted on their own sites still give folks some labeling or indication of the plugin name, slug name, version via JSON metadata file at path `/plugins/info/1.0/advanced-custom-fields.json` and JSON files checksum file `/plugin-checksums/advanced-custom-fields/6.3.8.json` for mirrors to be able to latch on to and identify the plugins and do file checksum verifications ([example](#demo-wordpress-installed-plugin-checksum-verification)). Below Github hosted plugins example was able to happen because I could get some of that information from their respective Github releases tag, name and download links i.e. for ACF https://github.com/AdvancedCustomFields/acf/releases.
 
+Example for GravityPDF:
+
+```bash
+curl -s https://api.wordpress.org/plugins/info/1.0/gravity-forms-pdf-extended.json | jq -r '[.name, .slug, .version, .download_link, .last_updated]'
+[
+  "Gravity PDF",
+  "gravity-forms-pdf-extended",
+  "6.12.0",
+  "https://downloads.wordpress.org/plugin/gravity-forms-pdf-extended.6.12.0.zip",
+  "2024-10-15 3:43am GMT"
+]
+```
+```bash
+curl -s https://downloads.wordpress.org/plugin-checksums/gravity-forms-pdf-extended/6.12.0.json | jq -r '[.plugin, .version, .source, .zip]'
+[
+  "gravity-forms-pdf-extended",
+  "6.12.0",
+  "https://plugins.svn.wordpress.org/gravity-forms-pdf-extended/tags/6.12.0/",
+  "https://downloads.wordpress.org/plugins/gravity-forms-pdf-extended.6.12.0.zip"
+]
+```
+
 Now test run for Github hosted WordPress plugins:
 
 Defined in `get_plugins_r2.sh` specific plugins to test mirror downloading.
