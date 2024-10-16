@@ -33,6 +33,7 @@
    * [wget download speed test](#wget-download-speed-test)
    * [Mirrored WordPress Plugin API End Point](#mirrored-wordpress-plugin-api-end-point)
    * [Github Hosted Plugins](#github-hosted-plugins)
+     * [Other WordPress Plugins Not Hosted On Github](#other-wordpress-plugins-not-hosted-on-github)
    * [Demo WordPress Plugin Install Using Local Mirror](#demo-wordpress-plugin-install-using-local-mirror)
      * [Install using default wordpress.org download source](#install-using-default-wordpress.org-download-source)
      * [Installing from local mirror downloaded plugin zip file](#installing-from-local-mirror-downloaded-plugin-zip-file)
@@ -2379,7 +2380,18 @@ With the possibility of some WordPress plugins being hosted on Github repositori
 
 This is first version attempt at supporting this via a config file `/home/wordpress-plugins/github_plugins.txt` which lists each Github hosted plugins details for `plugin-slug:github-username/repo-name`. So for the example of WPEngine's Advanced Custom Fields WordPress plugin hosted at https://github.com/AdvancedCustomFields/acf, it would end up something the below example where I am only defining a small sample of WordPress plugins to download and mirror. Note the Github hosted WordPress plugin checksum JSON file doesn't exist write now. Working on handling that next - ideally would be nice if WordPress plugins hosted on Github would have a publicly available plugin JSON metadata and checksum file JSON file equivalents as to what `wordpress.org` hosts. So folks like myself can point to the WordPress plugin's Github hosted JSON metadata and checksum file JSON files.
 
-Apparently once you update to WPEngine's latest plugins, future plugin updates come from their servers https://wpengine.com/support/installing-and-updating-free-wp-engine-plugins-and-themes/. As far as I know, Nitropack doesn't have Github hosted url, so haven't catered for it yet.
+Apparently once you update to WPEngine's latest plugins, future plugin updates come from their servers https://wpengine.com/support/installing-and-updating-free-wp-engine-plugins-and-themes/. 
+
+#### Other WordPress Plugins Not Hosted On Github
+
+As far as I know, Nitropack doesn't have Github hosted url, so haven't catered for it yet. So far the following WordPress plugins are not hosted on :
+
+* Nitropack https://support.nitropack.io/en/articles/9991759-installing-and-upgrading-to-the-latest-version-of-nitropack
+* GravityPDF [announced their hosting their WordPress on their own site](https://gravitypdf.com/news/installing-and-upgrading-to-the-canonical-version-of-gravity-pdf/) moving off of `wordpress.org`. They have changed their slug name from `gravity-forms-pdf-extended` to `gravity-pdf`.
+
+It would be nice if WordPress plugins hosted on their own sites still give folks some labeling or indication of the plugin name, slug name, version, and JSON files checksum file for mirrors to be able to latch on to and identify the plugins. Below Github hosted plugins example was able to happen because I could get some of that information from their respective Github releases tag, name and download links i.e. for ACF https://github.com/AdvancedCustomFields/acf/releases.
+
+Now test run for Github hosted WordPress plugins:
 
 Defined in `get_plugins_r2.sh` specific plugins to test mirror downloading.
 
